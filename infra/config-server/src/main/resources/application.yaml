@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: config-server
+  profiles:
+    active: native
+  cloud:
+    config:
+      server:
+        native:
+          searchLocations:
+            - classpath:config/infra/{application}
+            - classpath:config/core/{application}
+            - classpath:config/stat/{application}
+
+server:
+  port: 8888
+eureka:
+  client:
+    serviceUrl:
+      config:
+        import: "configserver:"
+        cloud:
+          config:
+            discovery:
+              enabled: true
+              serviceId: config-server
+            enabled: true
+            fail-fast: true
+            retry:
+              useRandomPolicy: true
+              max-interval: 6000
+      eureka:
+       client:
+        serviceUrl:
+         defaultZone: http://${eureka.instance.hostname:localhost}:${eureka.instance.port:8761}/eureka/

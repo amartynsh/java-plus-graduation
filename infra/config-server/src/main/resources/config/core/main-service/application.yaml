@@ -1,0 +1,17 @@
+server:
+  port: 0
+
+stats-server:
+  url: ${STATS_SERVER_URL:http://localhost:9090}
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: none
+      format_sql: true
+  sql:
+    init.mode: always
+  datasource:
+    url: jdbc:postgresql://localhost:5432/MainServDB
+    username: dbuser
+    password: 12345
