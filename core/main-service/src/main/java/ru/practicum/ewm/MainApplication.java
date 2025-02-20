@@ -1,5 +1,7 @@
 package ru.practicum.ewm;
 
+import com.netflix.appinfo.InstanceInfo;
+import com.netflix.discovery.DiscoveryClient;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -14,10 +16,14 @@ import java.util.List;
 @SpringBootApplication
 @ComponentScan(value = {"ru.practicum.ewm", "ru.practicum.stats.client"})
 public class MainApplication {
+
     public static void main(String[] args) {
         ConfigurableApplicationContext context = SpringApplication.run(MainApplication.class, args);
         StatClient statClient = context.getBean(StatClient.class);
 
+        DiscoveryClient discoveryClient = context.getBean(DiscoveryClient.class);
+        InstanceInfo instance = discoveryClient.getNextServerFromEureka("STAT-SERVER", false);
+        statClient.init(instance.getHomePageUrl());
         // hit stats
         LocalDateTime startDateTime = LocalDateTime.now();
 
