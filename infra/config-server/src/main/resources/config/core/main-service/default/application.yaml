@@ -1,16 +1,24 @@
-server:
-  port: 0
-discovery:
-  services:
-    stats-server-id: stat-server
 spring:
   jpa:
+    show-sql: true
     hibernate:
       ddl-auto: none
-      format_sql: true
+    properties:
+      hibernate:
+        format_sql: true
   sql:
-    init.mode: always
+    init:
+      mode: always
+  output:
+    ansi:
+      enabled: ALWAYS
   datasource:
+    driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/ewm-main
     username: root
     password: root
+discovery:
+  services:
+    stats-server-id: stat-server
+server:
+  port: 0
