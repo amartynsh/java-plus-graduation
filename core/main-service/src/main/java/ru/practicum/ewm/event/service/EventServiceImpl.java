@@ -117,7 +117,7 @@ public class EventServiceImpl implements EventService {
         if (event.getState() == EventStates.PUBLISHED)
             throw new ConflictDataException(
                     String.format("On Event private update - " +
-                                    "Event with id %s can't be changed because it is published.", event.getId()));
+                            "Event with id %s can't be changed because it is published.", event.getId()));
         checkEventTime(eventUpdateDto.getEventDate());
 
         eventMapper.update(event, eventUpdateDto, getOrCreateLocation(eventUpdateDto.getLocation()));
@@ -161,7 +161,6 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventFullDto get(Long eventId, HttpServletRequest request) {
-        log.info("EventService, метод get(Long eventId, HttpServletRequest request): {}", eventId);
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("On Event public get - Event doesn't exist with id: " + eventId));
 
@@ -173,7 +172,6 @@ public class EventServiceImpl implements EventService {
         populateWithStats(List.of(eventDto));
 
         hitStat(request);
-        //eventDto.setViews(eventDto.getViews() + 1);
         return eventDto;
     }
 
