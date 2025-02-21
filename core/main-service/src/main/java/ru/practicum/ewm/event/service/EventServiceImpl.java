@@ -173,7 +173,7 @@ public class EventServiceImpl implements EventService {
         populateWithStats(List.of(eventDto));
 
         hitStat(request);
-        eventDto.setViews(eventDto.getViews() + 1);
+        //eventDto.setViews(eventDto.getViews() + 1);
         return eventDto;
     }
 
