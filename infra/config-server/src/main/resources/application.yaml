@@ -3,6 +3,8 @@ spring:
     name: config-server
   profiles:
     active: native
+  discovery:
+    enabled=true:
   cloud:
     config:
       server:
@@ -13,7 +15,7 @@ spring:
             - classpath:config/stat/{application}
 
 server:
-  port: 9091
+  port: 0
 eureka:
   client:
     serviceUrl:
