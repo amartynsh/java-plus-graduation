@@ -161,6 +161,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventFullDto get(Long eventId, HttpServletRequest request) {
+        log.info("EventService, метод get(Long eventId, HttpServletRequest request): {}", eventId);
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("On Event public get - Event doesn't exist with id: " + eventId));
 
@@ -172,6 +173,7 @@ public class EventServiceImpl implements EventService {
         populateWithStats(List.of(eventDto));
 
         hitStat(request);
+        eventDto.setViews(eventDto.getViews() + 1);
         return eventDto;
     }
 

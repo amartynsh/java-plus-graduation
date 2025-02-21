@@ -5,6 +5,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.event.dto.EventFullDto;
 import ru.practicum.ewm.event.dto.EventPublicFilterParamsDto;
@@ -17,10 +19,12 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping(path = "/events")
 public class PublicEventController {
+    private static final Logger log = LoggerFactory.getLogger(PublicEventController.class);
     private final EventService eventService;
 
     @GetMapping("/{id}")
     public EventFullDto get(@PathVariable("id") Long eventId, HttpServletRequest request) {
+        log.info("PUBLIC CONTROLLER GET BY eventId, HttpServletRequest request");
         return eventService.get(eventId, request);
     }
 
@@ -29,6 +33,7 @@ public class PublicEventController {
                                    @PositiveOrZero @RequestParam(defaultValue = "0") int from,
                                    @Positive @RequestParam(defaultValue = "10") int size,
                                    HttpServletRequest request) {
+        log.info("PUBLIC CONTROLLER GET BY filters");
         return eventService.get(filters, from, size, request);
     }
 }
