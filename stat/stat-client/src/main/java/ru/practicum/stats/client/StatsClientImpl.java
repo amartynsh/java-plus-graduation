@@ -30,7 +30,7 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class StatsClientImpl implements StatClient {
     private final RestTemplate rest;
-    private final String service_name = "stat-server";
+    private final String serviceName = "stat-server";
     private final DiscoveryClient discoveryClient;
 
     @Autowired
@@ -49,7 +49,7 @@ public class StatsClientImpl implements StatClient {
     public void hit(HitDto hitDto) {
         HttpEntity<HitDto> requestEntity = new HttpEntity<>(hitDto, defaultHeaders());
         try {
-            rest.exchange(getUri(service_name) + "/hit", HttpMethod.POST, requestEntity, Object.class);
+            rest.exchange(getUri(serviceName) + "/hit", HttpMethod.POST, requestEntity, Object.class);
         } catch (HttpStatusCodeException e) {
             log.error("Hit stats was not successful with code {} and message {}", e.getStatusCode(), e.getMessage(), e);
         } catch (Exception e) {
@@ -81,7 +81,7 @@ public class StatsClientImpl implements StatClient {
         HttpEntity<String> requestEntity = new HttpEntity<>(defaultHeaders());
         ResponseEntity<StatsDto[]> statServerResponse;
         try {
-            statServerResponse = rest.exchange(getUri(service_name) + uri, HttpMethod.GET, requestEntity, StatsDto[].class);
+            statServerResponse = rest.exchange(getUri(serviceName) + uri, HttpMethod.GET, requestEntity, StatsDto[].class);
         } catch (HttpStatusCodeException e) {
             log.error("Get stats was not successful with code {} and message {}", e.getStatusCode(), e.getMessage(), e);
             return List.of();
