@@ -1,12 +1,16 @@
 package ru.practicum.stats.client;
 
+import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.*;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
+
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
@@ -16,27 +20,36 @@ import ru.practicum.stats.dto.StatsDto;
 import ru.practicum.stats.dto.StatsRequestParamsDto;
 import ru.practicum.stats.utils.DateTimeUtil;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Objects;
 
 @Slf4j
 @Component
+@Configuration
+@RequiredArgsConstructor
 public class StatsClientImpl implements StatClient {
     private final RestTemplate rest;
+    private final String serviceName = "stat-server";
+    private final DiscoveryClient discoveryClient;
 
     @Autowired
-    public StatsClientImpl(@Value("${stats-server.url}") String statUrl, RestTemplateBuilder builder) {
+    public StatsClientImpl(DiscoveryClient discoveryClient,
+                           RestTemplateBuilder builder) {
         this.rest = builder
-                .uriTemplateHandler(new DefaultUriBuilderFactory(statUrl))
+                //.uriTemplateHandler(new DefaultUriBuilderFactory(getUri(service_name)))
+                .uriTemplateHandler(new DefaultUriBuilderFactory(""))
                 .requestFactory(() -> new HttpComponentsClientHttpRequestFactory())
                 .build();
+        this.discoveryClient = discoveryClient;
+
     }
 
     @Override
     public void hit(HitDto hitDto) {
         HttpEntity<HitDto> requestEntity = new HttpEntity<>(hitDto, defaultHeaders());
         try {
-            rest.exchange("/hit", HttpMethod.POST, requestEntity, Object.class);
+            rest.exchange(getUri(serviceName) + "/hit", HttpMethod.POST, requestEntity, Object.class);
         } catch (HttpStatusCodeException e) {
             log.error("Hit stats was not successful with code {} and message {}", e.getStatusCode(), e.getMessage(), e);
         } catch (Exception e) {
@@ -68,7 +81,7 @@ public class StatsClientImpl implements StatClient {
         HttpEntity<String> requestEntity = new HttpEntity<>(defaultHeaders());
         ResponseEntity<StatsDto[]> statServerResponse;
         try {
-            statServerResponse = rest.exchange(uri, HttpMethod.GET, requestEntity, StatsDto[].class);
+            statServerResponse = rest.exchange(getUri(serviceName) + uri, HttpMethod.GET, requestEntity, StatsDto[].class);
         } catch (HttpStatusCodeException e) {
             log.error("Get stats was not successful with code {} and message {}", e.getStatusCode(), e.getMessage(), e);
             return List.of();
@@ -98,5 +111,12 @@ public class StatsClientImpl implements StatClient {
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setAccept(List.of(MediaType.APPLICATION_JSON));
         return headers;
+    }
+
+    private URI getUri(String serviceName) {
+        log.info("Названме: {}", serviceName);
+        ServiceInstance instanceInfo = discoveryClient.getInstances(serviceName).getFirst();
+        log.info("Значение URI = {}", instanceInfo.getUri());
+        return instanceInfo.getUri();
     }
 }
