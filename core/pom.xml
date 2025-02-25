@@ -11,8 +11,9 @@
     <packaging>pom</packaging>
     <artifactId>core</artifactId>
     <modules>
-        <module>main-service</module>
         <module>event-service</module>
-        <module>compilation</module>
+        <module>participationrequest-service</module>
+        <module>location-service</module>
+        <module>interaction-api</module>
     </modules>
 </project>
