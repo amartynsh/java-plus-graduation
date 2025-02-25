@@ -21,6 +21,10 @@
         <module>stat</module>
         <module>core</module>
         <module>infra</module>
+        <module>core/interaction-api</module>
+        <module>core/location-service</module>
+        <module>core/user-service</module>
+        <module>core/categories-service</module>
     </modules>
 
     <properties>

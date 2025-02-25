@@ -12,5 +12,7 @@
     <artifactId>core</artifactId>
     <modules>
         <module>main-service</module>
+        <module>event-service</module>
+        <module>compilation</module>
     </modules>
 </project>
