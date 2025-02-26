@@ -398,7 +398,7 @@ public class EventServiceImpl implements EventService {
     }
 
     private void checkEventOwner(Event event, Long userId) {
-        if (!Objects.equals(event.getInitiator().getId(), userId)) {
+        if (!Objects.equals(event.getInitiator(), userId)) {
             throw new ValidationException("Событие создал другой пользователь");
         }
     }
