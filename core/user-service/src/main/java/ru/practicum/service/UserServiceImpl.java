@@ -27,13 +27,13 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
 
     @Override
-    public UserShortDto getById(Long userId) {
+    public UserDto getById(Long userId) {
         log.info("getById params: id = {}", userId);
         User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException(
                 String.format("Пользователь с ид %s не найден", userId))
         );
         log.info("getById result user = {}", user);
-        return userMapper.toShortDto(user);
+        return userMapper.toDto(user);
     }
 
     @Override

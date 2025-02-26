@@ -6,6 +6,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.clients.location.PublicLocationClient;
 import ru.practicum.dto.location.LocationDto;
+import ru.practicum.dto.location.NewLocationDto;
 import ru.practicum.service.LocationService;
 
 import java.util.List;
@@ -29,5 +30,11 @@ public class PublicLocationController implements PublicLocationClient {
     public LocationDto getById(@PathVariable Long locationId) {
         log.info("GET /locations/{}", locationId);
         return locationService.getById(locationId);
+    }
+
+    @Override
+    @PostMapping
+    public LocationDto getBy(@RequestBody NewLocationDto newLocationDto) {
+        return locationService.findLocationBy(newLocationDto);
     }
 }

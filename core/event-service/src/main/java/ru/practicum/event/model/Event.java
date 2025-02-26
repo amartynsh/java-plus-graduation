@@ -3,9 +3,8 @@ package ru.practicum.event.model;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
-import ru.practicum.ewm.categories.model.Category;
-import ru.practicum.ewm.location.model.Location;
-import ru.practicum.ewm.user.model.User;
+import ru.practicum.categories.model.Category;
+import ru.practicum.dto.event.EventStates;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -28,9 +27,8 @@ public class Event {
     private Category category;
     private String description;
     private LocalDateTime eventDate;
-    @ManyToOne
-    @JoinColumn(name = "location_id")
-    private Location location;
+    @Column(name = "location_id")
+    private Long location;
     @Builder.Default
     private Boolean paid = false;
     @Builder.Default
@@ -38,9 +36,8 @@ public class Event {
     @Builder.Default
     private Boolean requestModeration = true;
     private String title;
-    @ManyToOne
-    @JoinColumn(name = "initiator_id")
-    private User initiator;
+    @Column(name = "initiator_id")
+    private Long initiator;
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private EventStates state = EventStates.PENDING;

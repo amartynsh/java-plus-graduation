@@ -1,34 +1,38 @@
 package ru.practicum.event.mapper;
 
 import org.mapstruct.*;
+import ru.practicum.categories.model.Category;
 import ru.practicum.dto.event.*;
-import ru.practicum.ewm.categories.model.Category;
-import ru.practicum.ewm.event.dto.*;
+
+import ru.practicum.dto.location.LocationDto;
+import ru.practicum.dto.user.UserDto;
+import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.event.model.Event;
-import ru.practicum.ewm.location.mapper.LocationMapper;
-import ru.practicum.ewm.location.model.Location;
-import ru.practicum.ewm.user.mapper.UserMapper;
-import ru.practicum.ewm.user.model.User;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring", uses = {LocationMapper.class, UserMapper.class})
+@Mapper(componentModel = "spring")
 public interface EventMapper {
     @Mapping(target = "confirmedRequests", ignore = true)
     @Mapping(target = "views", ignore = true)
+    @Mapping(target = "id", source = "event.id")
     @Named(value = "EventShortDto")
-    EventShortDto toShortDto(Event event);
+    @Mapping(target = "initiator", source = "userShortDto")
+    EventShortDto toShortDto(Event event, UserShortDto userShortDto);
 
-    @IterableMapping(qualifiedByName = "EventShortDto")
-    List<EventShortDto> toShortDto(Iterable<Event> event);
+   /* @IterableMapping(qualifiedByName = "EventShortDto")
+    List<EventShortDto> toShortDto(Iterable<Event> event);*/
 
     @Mapping(target = "confirmedRequests", ignore = true)
     @Mapping(target = "views", ignore = true)
-    EventFullDto toFullDto(Event event);
+    @Mapping(target = "location", source = "locationDto")
+    @Mapping(target = "initiator", source = "userShortDto")
+    @Mapping(target = "id", source = "event.id")
+    EventFullDto toFullDto(Event event, LocationDto locationDto, UserShortDto userShortDto);
 
-    List<EventFullDto> toFullDto(Iterable<Event> event);
+    //List<EventFullDto> toFullDto(Iterable<Event> event);
 
-    List<EventShortDto> toEventShortDtoList(Iterable<Event> events);
+    //List<EventShortDto> toEventShortDtoList(Iterable<Event> events);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "category", source = "category")
@@ -39,7 +43,7 @@ public interface EventMapper {
     @Mapping(target = "requestModeration", defaultValue = "true")
     @Mapping(target = "state", ignore = true)
     @Mapping(target = "publishedOn", ignore = true)
-    Event toEvent(NewEventDto newEventDto, Category category, User userFromRequest, Location location);
+    Event toEvent(NewEventDto newEventDto, Category category, Long userFromRequest, Long location);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "category", ignore = true)
@@ -48,7 +52,7 @@ public interface EventMapper {
     @Mapping(target = "state", ignore = true)
     @Mapping(target = "publishedOn", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    Event update(@MappingTarget Event event, UpdateEventUserRequestDto eventUpdateDto, Location location);
+    Event update(@MappingTarget Event event, UpdateEventUserRequestDto eventUpdateDto, Long location);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "category", source = "category")
@@ -57,5 +61,9 @@ public interface EventMapper {
     @Mapping(target = "state", ignore = true)
     @Mapping(target = "publishedOn", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    Event update(@MappingTarget Event event, UpdateEventAdminRequestDto eventUpdateDto, Category category, Location location);
+    Event update(@MappingTarget Event event, UpdateEventAdminRequestDto eventUpdateDto, Category category, Long location);
+
+    UserShortDto toUserShortDto(UserDto userDto);
+
+    List<UserShortDto> toUserShortDtos(Iterable<UserDto> userDto);
 }

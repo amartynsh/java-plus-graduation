@@ -17,13 +17,14 @@ import ru.practicum.model.Location;
 import ru.practicum.repository.LocationRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Transactional(readOnly = true)
-public class LocationServiceImpl implements  LocationService {
+public class LocationServiceImpl implements LocationService {
     LocationRepository locationRepository;
     LocationMapper locationMapper;
 
@@ -69,4 +70,22 @@ public class LocationServiceImpl implements  LocationService {
         locationRepository.deleteById(locationId);
         log.info("Location deleted with id: {}", locationId);
     }
+
+    @Override
+    public LocationDto findLocationBy(NewLocationDto newLocationDto) {
+        log.info("start findLocationById");
+
+        Optional<Location> location = locationRepository.findByLatAndLon(newLocationDto.getLat(), newLocationDto.getLon());
+        Location newLocation;
+        if (!location.isPresent()) {
+            newLocation = locationRepository.save(locationMapper.toLocation(newLocationDto));
+        } else {
+            newLocation = location.get();
+        }
+        return locationMapper.toDto(newLocation);
+    }
+
+
+    // return locationMapper.toLocationDto(newLocationDto) == null ? null : locationRepository.findByLatAndLon(newLocationDto.getLat(), newLocationDto.getLon())
+    //       locationMapper.toDto(locationRepository.save(locationMapper.toLocation(newLocationDto))));
 }

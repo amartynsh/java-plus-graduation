@@ -1,4 +1,4 @@
-package ru.practicum.compilation.src.service;
+package ru.practicum.compilation.service;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -9,16 +9,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.core.error.exception.NotFoundException;
 import ru.practicum.core.util.PagingUtil;
-import ru.practicum.dto.CompilationDto;
-import ru.practicum.dto.CompilationRequestDto;
-import ru.practicum.dto.UpdateCompilationRequestDto;
-import ru.practicum.compilation.src.mapper.CompilationMapper;
-import ru.practicum.compilation.src.model.Compilation;
-import ru.practicum.compilation.src.repository.CompilationRepository;
 
-import ru.practicum.ewm.event.mapper.EventMapper;
-import ru.practicum.ewm.event.model.Event;
-import ru.practicum.ewm.event.repository.EventRepository;
+import ru.practicum.compilation.mapper.CompilationMapper;
+import ru.practicum.compilation.model.Compilation;
+import ru.practicum.compilation.repository.CompilationRepository;
+import ru.practicum.dto.compilation.CompilationDto;
+import ru.practicum.dto.compilation.CompilationRequestDto;
+import ru.practicum.dto.compilation.UpdateCompilationRequestDto;
+import ru.practicum.event.handler.EventHandler;
+import ru.practicum.event.mapper.EventMapper;
+import ru.practicum.event.model.Event;
+import ru.practicum.event.repository.EventRepository;
+
 
 import java.util.Collections;
 import java.util.List;
@@ -29,10 +31,11 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Transactional(readOnly = true)
 public class CompilationServiceImpl implements CompilationService {
-    CompilationRepository compilationRepository;
-    EventRepository eventRepository;
-    CompilationMapper compilationMapper;
-    EventMapper eventMapper;
+    private final   CompilationRepository compilationRepository;
+    private final  EventRepository eventRepository;
+    private final  CompilationMapper compilationMapper;
+    private final  EventMapper eventMapper;
+    private final EventHandler eventHandler;
 
     @Override
     public List<CompilationDto> getCompilations(Boolean pinned, Integer from, Integer size) {
@@ -40,7 +43,7 @@ public class CompilationServiceImpl implements CompilationService {
         PageRequest page = PagingUtil.pageOf(from, size);
 
         return compilationRepository.findAllByPinned(pinned, page)
-                .map(compilation -> compilationMapper.toDto(compilation, eventMapper.toEventShortDtoList(compilation.getEvents())))
+                .map(compilation -> compilationMapper.toDto(compilation, eventHandler.getListEventShortDto(compilation.getEvents())))
                 .getContent();
     }
 
@@ -51,7 +54,7 @@ public class CompilationServiceImpl implements CompilationService {
                 String.format("Подборка с ид %s не найдена", compilationId))
         );
         log.info("getById result compilation = {}", compilation);
-        return compilationMapper.toDto(compilation, eventMapper.toEventShortDtoList(compilation.getEvents()));
+        return compilationMapper.toDto(compilation,eventHandler.getListEventShortDto(compilation.getEvents()));
     }
 
     @Override
@@ -62,7 +65,7 @@ public class CompilationServiceImpl implements CompilationService {
         List<Event> events = getAndCheckEventList(compilationRequestDto.getEvents());
         Compilation compilation = compilationRepository.save(compilationMapper.toEntity(compilationRequestDto, events));
         log.info("addCompilation result compilation = {}", compilation);
-        return compilationMapper.toDto(compilation, eventMapper.toEventShortDtoList(compilation.getEvents()));
+        return compilationMapper.toDto(compilation,eventHandler.getListEventShortDto(compilation.getEvents()));
     }
 
     @Override
@@ -77,7 +80,7 @@ public class CompilationServiceImpl implements CompilationService {
         compilation = compilationRepository.save(compilation);
         log.info("addCompilation result compilation = {}", compilation);
 
-        return compilationMapper.toDto(compilation, eventMapper.toEventShortDtoList(compilation.getEvents()));
+        return compilationMapper.toDto(compilation, eventHandler.getListEventShortDto(compilation.getEvents()));
     }
 
     @Override

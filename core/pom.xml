@@ -14,6 +14,8 @@
         <module>event-service</module>
         <module>participationrequest-service</module>
         <module>location-service</module>
+        <module>user-service</module>
         <module>interaction-api</module>
+
     </modules>
 </project>

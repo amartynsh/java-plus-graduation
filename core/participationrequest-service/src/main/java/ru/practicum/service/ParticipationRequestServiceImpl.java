@@ -5,21 +5,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import ru.practicum.clients.event.PrivateEventClient;
 import ru.practicum.clients.user.AdminUserClient;
 import ru.practicum.core.error.exception.ConflictDataException;
 import ru.practicum.core.error.exception.NotFoundException;
+import ru.practicum.dto.event.EventFullDto;
+import ru.practicum.dto.event.EventStates;
 import ru.practicum.dto.participationrequest.ParticipationRequestDto;
 import ru.practicum.dto.user.UserDto;
-import ru.practicum.ewm.event.model.Event;
-import ru.practicum.ewm.event.model.EventStates;
-import ru.practicum.ewm.event.repository.EventRepository;
-
 import ru.practicum.mapper.ParticipationRequestMapper;
 import ru.practicum.model.ParticipationRequest;
-import ru.practicum.model.ParticipationRequestStatus;
+import ru.practicum.dto.participationrequest.ParticipationRequestStatus;
 import ru.practicum.repository.ParticipationRequestRepository;
-
-import ru.practicum.ewm.user.repository.UserRepository;
 
 import java.util.List;
 
@@ -30,24 +27,18 @@ import java.util.List;
 public class ParticipationRequestServiceImpl implements ParticipationRequestService {
     private final ParticipationRequestRepository participationRequestRepository;
     private final ParticipationRequestMapper participationRequestMapper;
-    private final UserRepository userRepository;
-    private final EventRepository eventRepository;
-
     private final AdminUserClient userClient;
+    private final PrivateEventClient privateEventClient;
 
     private UserDto checkAndGetUserById(Long userId) {
-
-        return userClient.getUsers(List.of(userId), 0,1);
+        return userClient.getById(userId);
     }
 
     @Override
     @Transactional
     public ParticipationRequestDto create(Long userId, Long eventId) {
         UserDto requester = checkAndGetUserById(userId);
-
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException("On part. request create - " +
-                        "Event doesn't exist with id: " + eventId));
+        EventFullDto event = privateEventClient.getEvent(userId, eventId);
 
         if (!event.getState().equals(EventStates.PUBLISHED))
             throw new ConflictDataException("On part. request create - " +
@@ -59,13 +50,13 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
                     String.format("On part. request create - " +
                             "Event with id %s has Requester with id %s as an initiator: ", eventId, userId));
 
-        if (participationRequestRepository.existsByRequesterAndEvent(requester, event))
+        if (participationRequestRepository.existsByRequesterAndEvent(requester.getId(), event.getId()))
             throw new ConflictDataException(
                     String.format("On part. request create - " +
                             "Request by Requester with id %s and Event with id %s already exists: ", eventId, userId));
 
         if (event.getParticipantLimit() != 0) {
-            long requestsCount = participationRequestRepository.countByEventAndStatusIn(event,
+            long requestsCount = participationRequestRepository.countByEventAndStatusIn(event.getId(),
                     List.of(ParticipationRequestStatus.CONFIRMED));
             if (requestsCount >= event.getParticipantLimit())
                 throw new ConflictDataException(
@@ -75,8 +66,8 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
         ParticipationRequest createdParticipationRequest = participationRequestRepository.save(
                 ParticipationRequest.builder()
-                        .requester(requester)
-                        .event(event)
+                        .requester(requester.getId())
+                        .event(event.getId())
                         .status(event.getParticipantLimit() != 0 && event.getRequestModeration() ?
                                 ParticipationRequestStatus.PENDING : ParticipationRequestStatus.CONFIRMED)
                         .build()
@@ -89,7 +80,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     public List<ParticipationRequestDto> get(Long userId) {
         UserDto requester = checkAndGetUserById(userId);
 
-        List<ParticipationRequest> participationRequests = participationRequestRepository.findByRequester(requester);
+        List<ParticipationRequest> participationRequests = participationRequestRepository.findByRequester(requester.getId());
         log.trace("Participation requests are requested by user with id {}", userId);
         return participationRequestMapper.toDto(participationRequests);
     }
@@ -102,7 +93,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         ParticipationRequest participationRequest = participationRequestRepository.findById(requestId)
                 .orElseThrow(() -> new NotFoundException("On part. request cancel - Request doesn't exist with id: " + requestId));
 
-        if (!participationRequest.getRequester().getId().equals(userId))
+        if (!participationRequest.getRequester().equals(userId))
             throw new NotFoundException(String.format("On part. request cancel - " +
                     "Request with id %s can't be canceled by not owner with id %s: ", requestId, userId));
 

@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface UserService {
 
-    UserShortDto getById(Long userId);
+    UserDto getById(Long userId);
 
     List<UserShortDto> getUsers(List<Long> ids);
 

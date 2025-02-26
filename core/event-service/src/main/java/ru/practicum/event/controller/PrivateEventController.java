@@ -9,8 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.clients.event.PrivateEventClient;
-import ru.practicum.dto.event.*;
 
+import ru.practicum.dto.event.*;
 import ru.practicum.dto.participationrequest.ParticipationRequestDto;
 import ru.practicum.event.service.EventService;
 

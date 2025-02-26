@@ -3,9 +3,9 @@ package ru.practicum.dto.event;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import ru.practicum.ewm.core.util.DateTimeUtil;
-import ru.practicum.event.model.EventStates;
-import ru.practicum.ewm.location.dto.LocationDto;
+import ru.practicum.core.util.DateTimeUtil;
+import ru.practicum.dto.location.LocationDto;
+
 
 import java.time.LocalDateTime;
 
@@ -24,4 +24,5 @@ public class EventFullDto extends EventShortDto {
     private LocalDateTime createdOn;
     @JsonFormat(pattern = DateTimeUtil.DATE_TIME_FORMAT)
     private LocalDateTime publishedOn;
+
 }

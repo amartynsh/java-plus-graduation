@@ -2,25 +2,21 @@ package ru.practicum.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.querydsl.QuerydslPredicateExecutor;
+
 import org.springframework.data.repository.query.Param;
-import ru.practicum.ewm.event.model.Event;
+
 import ru.practicum.model.ParticipationRequest;
-import ru.practicum.model.ParticipationRequestStatus;
-import ru.practicum.ewm.user.model.User;
+import ru.practicum.dto.participationrequest.ParticipationRequestStatus;
+
 
 import java.util.List;
 
-public interface ParticipationRequestRepository extends JpaRepository<ParticipationRequest, Long>,
-        QuerydslPredicateExecutor<ParticipationRequest> {
-    @Query("Select pr from ParticipationRequest as pr where pr.requester = :requester and pr.event.initiator <> :requester")
-    List<ParticipationRequest> findByRequester(@Param("requester") User requester);
+public interface ParticipationRequestRepository extends JpaRepository<ParticipationRequest, Long> {
+    @Query("Select pr from ParticipationRequest as pr where pr.requester = :requester and pr.event <> :requester")
+    List<ParticipationRequest> findByRequester(@Param("requester") Long requester);
 
-    boolean existsByRequesterAndEvent(User requester, Event event);
+    boolean existsByRequesterAndEvent(Long requester, Long event);
 
-    long countByEventAndStatusIn(Event event, List<ParticipationRequestStatus> status);
-
-    List<ParticipationRequest> findAllByEvent_IdAndStatus(Long eventId, ParticipationRequestStatus status);
-
+    long countByEventAndStatusIn(Long event, List<ParticipationRequestStatus> status);
 
 }

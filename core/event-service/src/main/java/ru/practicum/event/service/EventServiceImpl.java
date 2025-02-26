@@ -18,39 +18,39 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.querydsl.QSort;
 import org.springframework.stereotype.Service;
+import ru.practicum.categories.model.Category;
+import ru.practicum.categories.repository.CategoriesRepository;
+import ru.practicum.clients.location.PublicLocationClient;
+import ru.practicum.clients.user.AdminUserClient;
 import ru.practicum.core.error.exception.ConflictDataException;
 import ru.practicum.core.error.exception.NotFoundException;
 import ru.practicum.core.error.exception.ValidationException;
 import ru.practicum.core.util.DateTimeUtil;
 import ru.practicum.core.util.PagingUtil;
 import ru.practicum.dto.event.*;
-import ru.practicum.ewm.categories.model.Category;
-import ru.practicum.ewm.categories.repository.CategoriesRepository;
 
-import ru.practicum.ewm.event.dto.*;
+
+import ru.practicum.dto.location.LocationDto;
+import ru.practicum.dto.location.NewLocationDto;
+import ru.practicum.dto.participationrequest.ParticipationRequestDto;
+import ru.practicum.dto.participationrequest.ParticipationRequestStatus;
+import ru.practicum.dto.user.UserDto;
+
+import ru.practicum.event.handler.EventHandler;
 import ru.practicum.event.mapper.EventMapper;
-import ru.practicum.ewm.location.dto.NewLocationDto;
-import ru.practicum.ewm.location.mapper.LocationMapper;
-import ru.practicum.ewm.event.model.*;
+
+import ru.practicum.event.mapper.EventToDtoMapper;
 import ru.practicum.event.model.Event;
-import ru.practicum.event.model.EventStateActionAdmin;
-import ru.practicum.event.model.EventStateActionPrivate;
-import ru.practicum.event.model.EventStates;
+import ru.practicum.dto.event.EventStateActionAdmin;
+import ru.practicum.dto.event.EventStateActionPrivate;
+import ru.practicum.dto.event.EventStates;
 import ru.practicum.event.repository.EventRepository;
-import ru.practicum.ewm.location.repository.LocationRepository;
-import ru.practicum.ewm.location.model.Location;
-import ru.practicum.ewm.participationrequest.dto.ParticipationRequestDto;
-import ru.practicum.ewm.participationrequest.mapper.ParticipationRequestMapper;
-import ru.practicum.ewm.participationrequest.model.ParticipationRequest;
-import ru.practicum.ewm.participationrequest.model.ParticipationRequestStatus;
-import ru.practicum.ewm.participationrequest.model.QParticipationRequest;
-import ru.practicum.ewm.participationrequest.repository.ParticipationRequestRepository;
-import ru.practicum.ewm.user.model.User;
-import ru.practicum.ewm.user.repository.UserRepository;
+
 import ru.practicum.stats.client.StatClient;
 import ru.practicum.stats.dto.HitDto;
 import ru.practicum.stats.dto.StatsDto;
 import ru.practicum.stats.dto.StatsRequestParamsDto;
+
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -65,16 +65,15 @@ import static com.querydsl.core.group.GroupBy.groupBy;
 public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
     private final CategoriesRepository categoriesRepository;
-    private final UserRepository userRepository;
-    private final LocationRepository locationRepository;
     private final EventMapper eventMapper;
-    private final LocationMapper locationMapper;
-    private final ParticipationRequestRepository participationRequestRepository;
-    private final ParticipationRequestMapper participationRequestMapper;
+    private static final String appNameForStat = "ewm-main-service";
     private final EntityManager entityManager;
     private final StatClient statClient;
 
-    private static final String appNameForStat = "ewm-main-service";
+    private final AdminUserClient adminUserClient;
+    private final PublicLocationClient publicLocationClient;
+    private final EventHandler eventHandler;
+
 
     private Event checkAndGetEventByIdAndInitiatorId(Long eventId, Long initiatorId) {
         return eventRepository.findByIdAndInitiator_Id(eventId, initiatorId)
@@ -83,14 +82,13 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public EventFullDto addEvent(Long id, NewEventDto newEventDto) {
+    public EventFullDto addEvent(Long userId, NewEventDto newEventDto) {
         checkEventTime(newEventDto.getEventDate());
         Category category = categoriesRepository.findById(newEventDto.getCategory()).get();
-        User user = userRepository.findById(id).get();
-        Location location = getOrCreateLocation(newEventDto.getLocation());
-
-        Event event = eventRepository.save(eventMapper.toEvent(newEventDto, category, user, location));
-        return eventMapper.toFullDto(event);
+        UserDto user = adminUserClient.getById(userId);
+        LocationDto location = getOrCreateLocation(newEventDto.getLocation());
+        Event event = eventRepository.save(eventMapper.toEvent(newEventDto, category, user.getId(), location.getId()));
+        return EventToDtoMapper.eventToFullDto(event, user, location, category);
     }
 
     @Override
@@ -98,23 +96,25 @@ public class EventServiceImpl implements EventService {
         PageRequest page = PagingUtil.pageOf(from, size).withSort(Sort.by(Sort.Order.desc("eventDate")));
         List<Event> events = eventRepository.findAllByInitiator_Id(id, page);
 
-        List<EventShortDto> eventsDto = eventMapper.toShortDto(events);
+        List<EventShortDto> eventsDto = eventHandler.getListEventShortDto(events);
+
         populateWithConfirmedRequests(events, eventsDto);
         populateWithStats(eventsDto);
-
         return eventsDto;
     }
+
 
     @Override
     public EventFullDto getEventById(Long userId, Long eventId) {
         Event event = checkAndGetEventByIdAndInitiatorId(eventId, userId);
 
-        EventFullDto eventDto = eventMapper.toFullDto(event);
-        populateWithConfirmedRequests(List.of(event), List.of(eventDto));
+        EventFullDto eventDto = eventHandler.getEventFullDto(event);
+        populateWithConfirmedRequests(List.of(event), List.of());
         populateWithStats(List.of(eventDto));
 
         return eventDto;
     }
+
 
     @Override
     public EventFullDto updateEvent(Long userId, Long eventId, UpdateEventUserRequestDto eventUpdateDto) {
@@ -123,10 +123,10 @@ public class EventServiceImpl implements EventService {
         if (event.getState() == EventStates.PUBLISHED)
             throw new ConflictDataException(
                     String.format("On Event private update - " +
-                                    "Event with id %s can't be changed because it is published.", event.getId()));
+                            "Event with id %s can't be changed because it is published.", event.getId()));
         checkEventTime(eventUpdateDto.getEventDate());
 
-        eventMapper.update(event, eventUpdateDto, getOrCreateLocation(eventUpdateDto.getLocation()));
+        eventMapper.update(event, eventUpdateDto, getOrCreateLocation(eventUpdateDto.getLocation()).getId());
         if (eventUpdateDto.getStateAction() != null) {
             setStateToEvent(eventUpdateDto, event);
         }
@@ -134,7 +134,7 @@ public class EventServiceImpl implements EventService {
 
         event = eventRepository.save(event);
 
-        EventFullDto eventDto = eventMapper.toFullDto(event);
+        EventFullDto eventDto = eventHandler.getEventFullDto(event);
         populateWithConfirmedRequests(List.of(event), List.of(eventDto));
         populateWithStats(List.of(eventDto));
 
@@ -153,11 +153,12 @@ public class EventServiceImpl implements EventService {
                             updateEventAdminRequestDto.getCategory()));
 
         event = eventMapper.update(event, updateEventAdminRequestDto, category,
-                getOrCreateLocation(updateEventAdminRequestDto.getLocation()));
+                getOrCreateLocation(updateEventAdminRequestDto.getLocation()).getId());
         calculateNewEventState(event, updateEventAdminRequestDto.getStateAction());
 
         event = eventRepository.save(event);
-        EventFullDto eventDto = eventMapper.toFullDto(event);
+
+        EventFullDto eventDto = eventHandler.getEventFullDto(event);
         populateWithConfirmedRequests(List.of(event), List.of(eventDto));
         populateWithStats(List.of(eventDto));
 
@@ -173,7 +174,7 @@ public class EventServiceImpl implements EventService {
         if (event.getState() != EventStates.PUBLISHED)
             throw new NotFoundException("On Event public get - Event isn't published with id: " + eventId);
 
-        EventFullDto eventDto = eventMapper.toFullDto(event);
+        EventFullDto eventDto = eventHandler.getEventFullDto(event);
         populateWithConfirmedRequests(List.of(event), List.of(eventDto));
         populateWithStats(List.of(eventDto));
 
@@ -205,7 +206,7 @@ public class EventServiceImpl implements EventService {
         List<Event> events = eventRepository.findAll(builder,
                 PagingUtil.pageOf(from, size).withSort(new QSort(event.createdOn.desc()))).toList();
 
-        List<EventFullDto> eventsDto = eventMapper.toFullDto(events);
+        List<EventFullDto> eventsDto = eventHandler.getListEventFullDto(events);
         populateWithConfirmedRequests(events, eventsDto);
         populateWithStats(eventsDto);
 
@@ -254,7 +255,7 @@ public class EventServiceImpl implements EventService {
 
         List<Event> events = eventRepository.findAll(builder, page).toList();
 
-        List<EventShortDto> eventsDto = eventMapper.toShortDto(events);
+        List<EventShortDto> eventsDto = eventHandler.getListEventShortDto(events);
         populateWithConfirmedRequests(events, eventsDto, true);
         populateWithStats(eventsDto);
 
@@ -341,9 +342,8 @@ public class EventServiceImpl implements EventService {
         return null;
     }
 
-    private Location getOrCreateLocation(NewLocationDto newLocationDto) {
-        return newLocationDto == null ? null : locationRepository.findByLatAndLon(newLocationDto.getLat(), newLocationDto.getLon())
-                .orElseGet(() -> locationRepository.save(locationMapper.toLocation(newLocationDto)));
+    private LocationDto getOrCreateLocation(NewLocationDto newLocationDto) {
+        return publicLocationClient.getBy(newLocationDto);
     }
 
     private void calculateNewEventState(Event event, EventStateActionAdmin stateAction) {
@@ -407,7 +407,7 @@ public class EventServiceImpl implements EventService {
         populateWithConfirmedRequests(events, eventsDto, null);
     }
 
-    private void populateWithConfirmedRequests(List<Event> events, List<?  extends EventShortDto>  eventsDto, Boolean filterOnlyAvailable) {
+    private void populateWithConfirmedRequests(List<Event> events, List<? extends EventShortDto> eventsDto, Boolean filterOnlyAvailable) {
         QParticipationRequest qRequest = QParticipationRequest.participationRequest;
         BooleanBuilder requestBuilder = new BooleanBuilder();
         requestBuilder.and(qRequest.status.eq(ParticipationRequestStatus.CONFIRMED)).and(qRequest.event.in(events));

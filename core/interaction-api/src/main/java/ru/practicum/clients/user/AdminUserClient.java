@@ -20,10 +20,12 @@ public interface AdminUserClient {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public UserDto registerUser(@RequestBody @Valid UserRequestDto userRequestDto);
+    UserDto registerUser(@RequestBody @Valid UserRequestDto userRequestDto);
 
     @DeleteMapping("/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable(name = "userId") Long userId);
+    void delete(@PathVariable(name = "userId") Long userId);
 
+    @GetMapping("/{userId}")
+    UserDto getById(@PathVariable(name = "userId") Long userId);
 }

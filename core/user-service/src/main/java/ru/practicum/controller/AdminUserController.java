@@ -47,4 +47,10 @@ public class AdminUserController implements AdminUserClient {
         log.info("DELETE /admin/users/{userID} userID = {})", userId);
         userService.delete(userId);
     }
+
+    @GetMapping("/{userId}")
+    public UserDto getById(@PathVariable(name = "userId") Long userId) {
+        log.info("GET /admin/user");
+        return userService.getById(userId);
+    }
 }

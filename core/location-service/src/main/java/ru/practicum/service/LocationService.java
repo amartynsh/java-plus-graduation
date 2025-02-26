@@ -17,4 +17,6 @@ public interface LocationService {
     LocationDto updateLocation(Long locationId, UpdateLocationAdminRequestDto updateLocationAdminRequestDto);
 
     void delete(Long locationId);
+
+    LocationDto findLocationBy(NewLocationDto newLocationDto);
 }

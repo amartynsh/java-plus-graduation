@@ -8,10 +8,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.practicum.ewm.core.util.DateTimeUtil;
-import ru.practicum.ewm.core.validation.NullOrNotBlank;
-import ru.practicum.event.model.EventStateActionAdmin;
-import ru.practicum.ewm.location.dto.NewLocationDto;
+import ru.practicum.core.util.DateTimeUtil;
+import ru.practicum.core.validation.NullOrNotBlank;
+import ru.practicum.dto.location.NewLocationDto;
+
 
 import java.time.LocalDateTime;
 

@@ -15,13 +15,13 @@ import java.util.List;
 @FeignClient(name = "admin-event-client")
 
 public interface AdminEventClient {
-       @PatchMapping("/{eventId}")
+    @PatchMapping("/{eventId}")
     EventFullDto update(@PathVariable Long eventId,
-                               @Valid @RequestBody UpdateEventAdminRequestDto updateEventAdminRequestDto);
+                        @Valid @RequestBody UpdateEventAdminRequestDto updateEventAdminRequestDto);
 
     @GetMapping
     List<EventFullDto> get(@Valid EventAdminFilterParamsDto filters,
-                                  @PositiveOrZero @RequestParam(defaultValue = "0") int from,
-                                  @Positive @RequestParam(defaultValue = "10") int size);
-    }
+                           @PositiveOrZero @RequestParam(defaultValue = "0") int from,
+                           @Positive @RequestParam(defaultValue = "10") int size);
+}
 

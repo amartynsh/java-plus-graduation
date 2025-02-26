@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.event.*;
 import ru.practicum.dto.participationrequest.ParticipationRequestDto;
 
+
 import java.util.List;
 
 @FeignClient(name = "private-event-client")

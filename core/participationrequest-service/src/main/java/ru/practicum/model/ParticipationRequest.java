@@ -4,8 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.proxy.HibernateProxy;
-import ru.practicum.ewm.event.model.Event;
-import ru.practicum.ewm.user.model.User;
+import ru.practicum.dto.participationrequest.ParticipationRequestStatus;
+
 
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -22,13 +22,11 @@ public class ParticipationRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "requester_id")
-    private User requester;
+    @Column(name = "requester_id")
+    private Long requester;
 
-    @ManyToOne
-    @JoinColumn(name = "event_id")
-    private Event event;
+    @Column(name = "event_id")
+    private Long event;
 
     @Enumerated(EnumType.STRING)
     private ParticipationRequestStatus status;

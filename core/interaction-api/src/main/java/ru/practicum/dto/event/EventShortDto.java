@@ -3,9 +3,10 @@ package ru.practicum.dto.event;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import ru.practicum.ewm.categories.dto.CategoryDto;
-import ru.practicum.ewm.core.util.DateTimeUtil;
-import ru.practicum.ewm.user.dto.UserShortDto;
+import ru.practicum.core.util.DateTimeUtil;
+import ru.practicum.dto.categories.CategoryDto;
+import ru.practicum.dto.user.UserShortDto;
+
 
 import java.time.LocalDateTime;
 
