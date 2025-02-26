@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import ru.practicum.categories.model.Category;
 import ru.practicum.categories.repository.CategoriesRepository;
 import ru.practicum.clients.location.PublicLocationClient;
+import ru.practicum.clients.participationrequest.PrivateParticipationRequestClient;
 import ru.practicum.clients.user.AdminUserClient;
 import ru.practicum.core.error.exception.ConflictDataException;
 import ru.practicum.core.error.exception.NotFoundException;
@@ -44,6 +45,7 @@ import ru.practicum.event.model.Event;
 import ru.practicum.dto.event.EventStateActionAdmin;
 import ru.practicum.dto.event.EventStateActionPrivate;
 import ru.practicum.dto.event.EventStates;
+import ru.practicum.event.model.QEvent;
 import ru.practicum.event.repository.EventRepository;
 
 import ru.practicum.stats.client.StatClient;
@@ -73,6 +75,7 @@ public class EventServiceImpl implements EventService {
     private final AdminUserClient adminUserClient;
     private final PublicLocationClient publicLocationClient;
     private final EventHandler eventHandler;
+    private final PrivateParticipationRequestClient privateParticipationRequestClient;
 
 
     private Event checkAndGetEventByIdAndInitiatorId(Long eventId, Long initiatorId) {
@@ -189,7 +192,7 @@ public class EventServiceImpl implements EventService {
         BooleanBuilder builder = new BooleanBuilder();
 
         if (filters.getUsers() != null && !filters.getUsers().isEmpty())
-            builder.and(event.initiator.id.in(filters.getUsers()));
+            builder.and(event.initiator.in(filters.getUsers()));
 
         if (filters.getStates() != null && !filters.getStates().isEmpty())
             builder.and(event.state.in(filters.getStates()));
@@ -271,10 +274,10 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.findById(eventId).orElseThrow(() ->
                 new NotFoundException("Такого события не существует: " + eventId));
         checkEventOwner(event, userId);
-        return participationRequestRepository.findAllByEvent_IdAndStatus(eventId, ParticipationRequestStatus.PENDING)
-                .stream()
-                .map(participationRequestMapper::toDto)
-                .collect(Collectors.toList());
+
+        return privateParticipationRequestClient.getParticipationRequestsBy(eventId,
+                ParticipationRequestStatus.PENDING.toString());
+
     }
 
     @Override
@@ -285,61 +288,17 @@ public class EventServiceImpl implements EventService {
 
         Event event = eventRepository.findById(eventId).orElseThrow(() ->
                 new NotFoundException("Такого события не существует: " + eventId));
-        userRepository.findById(userId).orElseThrow(() ->
-                new NotFoundException("Такого пользователя не существует: " + userId));
+        adminUserClient.getById(userId);
         checkEventOwner(event, userId);
         int participantsLimit = event.getParticipantLimit();
 
-        List<ParticipationRequest> confirmedRequests = participationRequestRepository.findAllByEvent_IdAndStatus(eventId,
-                ParticipationRequestStatus.CONFIRMED);
-        List<ParticipationRequest> requestToChangeStatus = statusUpdateRequest.getRequestIds()
-                .stream()
-                .map(participationRequestRepository::findById)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .toList();
-        //Не очень понял, как обрабатывать это условие:
         // "если для события лимит заявок равен 0 или отключена пре-модерация заявок, то подтверждение заявок не требуется"
         if (!event.getRequestModeration() || event.getParticipantLimit() == 0) {
             log.info("Заявки подтверждать не требуется");
             return null;
         }
 
-        log.info("Заявки:  Лимит: {}, а заявок {}, разница между ними: {}", participantsLimit,
-                statusUpdateRequest.getRequestIds().size(), (participantsLimit
-                        - statusUpdateRequest.getRequestIds().size()));
-
-        if (statusUpdateRequest.getStatus().equals(ParticipationRequestStatus.CONFIRMED)) {
-            log.info("меняем статус заявок для статуса: {}", ParticipationRequestStatus.CONFIRMED);
-            if ((participantsLimit - (confirmedRequests.size()) - statusUpdateRequest.getRequestIds().size()) >= 0) {
-                for (ParticipationRequest request : requestToChangeStatus) {
-                    request.setStatus(ParticipationRequestStatus.CONFIRMED);
-                    participationRequestRepository.save(request);
-                }
-                return new EventRequestStatusUpdateResultDto(requestToChangeStatus
-                        .stream().map(participationRequestMapper::toDto)
-                        .toList(), null);
-            } else {
-                throw new ConflictDataException("слишком много участников. Лимит: " + participantsLimit +
-                        ", уже подтвержденных заявок: " + confirmedRequests.size() + ", а заявок на одобрение: " +
-                        statusUpdateRequest.getRequestIds().size() +
-                        ". Разница между ними: " + (participantsLimit - confirmedRequests.size() -
-                        statusUpdateRequest.getRequestIds().size()));
-            }
-        } else if (statusUpdateRequest.getStatus().equals(ParticipationRequestStatus.REJECTED)) {
-            log.info("меняем статус заявок для статуса: {}", ParticipationRequestStatus.REJECTED);
-            for (ParticipationRequest request : requestToChangeStatus) {
-                if (request.getStatus() == ParticipationRequestStatus.CONFIRMED) {
-                    throw new ConflictDataException("Заявка" + request.getStatus() + "уже подтверждена.");
-                }
-                request.setStatus(ParticipationRequestStatus.REJECTED);
-                participationRequestRepository.save(request);
-            }
-            return new EventRequestStatusUpdateResultDto(null, requestToChangeStatus
-                    .stream().map(participationRequestMapper::toDto)
-                    .toList());
-        }
-        return null;
+        return privateParticipationRequestClient.changeEventState(userId, eventId, participantsLimit, statusUpdateRequest);
     }
 
     private LocationDto getOrCreateLocation(NewLocationDto newLocationDto) {
