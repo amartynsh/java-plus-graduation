@@ -2,13 +2,10 @@ package ru.practicum.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.repository.query.Param;
-
-import ru.practicum.model.ParticipationRequest;
 import ru.practicum.dto.participationrequest.ParticipationRequestStatus;
-
+import ru.practicum.model.ParticipationRequest;
 
 import java.util.List;
 

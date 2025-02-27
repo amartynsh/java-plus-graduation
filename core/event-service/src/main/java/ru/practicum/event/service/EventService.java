@@ -4,7 +4,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import ru.practicum.dto.event.*;
 import ru.practicum.dto.participationrequest.ParticipationRequestDto;
 
-
 import java.util.List;
 
 public interface EventService {

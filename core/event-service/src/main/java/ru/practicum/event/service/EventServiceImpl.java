@@ -13,7 +13,7 @@ import org.springframework.data.querydsl.QSort;
 import org.springframework.stereotype.Service;
 import ru.practicum.categories.model.Category;
 import ru.practicum.categories.repository.CategoriesRepository;
-import ru.practicum.clients.location.PublicLocationClient;
+import ru.practicum.clients.location.LocationClient;
 import ru.practicum.clients.participationrequest.PrivateParticipationRequestClient;
 import ru.practicum.clients.user.AdminUserClient;
 import ru.practicum.core.error.exception.ConflictDataException;
@@ -22,36 +22,25 @@ import ru.practicum.core.error.exception.ValidationException;
 import ru.practicum.core.util.DateTimeUtil;
 import ru.practicum.core.util.PagingUtil;
 import ru.practicum.dto.event.*;
-
-
 import ru.practicum.dto.location.LocationDto;
 import ru.practicum.dto.location.NewLocationDto;
 import ru.practicum.dto.participationrequest.ParticipationRequestDto;
 import ru.practicum.dto.participationrequest.ParticipationRequestStatus;
 import ru.practicum.dto.user.UserDto;
-
 import ru.practicum.event.handler.EventHandler;
 import ru.practicum.event.mapper.EventMapper;
-
 import ru.practicum.event.mapper.EventToDtoMapper;
 import ru.practicum.event.model.Event;
-import ru.practicum.dto.event.EventStateActionAdmin;
-import ru.practicum.dto.event.EventStateActionPrivate;
-import ru.practicum.dto.event.EventStates;
 import ru.practicum.event.model.QEvent;
 import ru.practicum.event.repository.EventRepository;
-
 import ru.practicum.stats.client.StatClient;
 import ru.practicum.stats.dto.HitDto;
 import ru.practicum.stats.dto.StatsDto;
 import ru.practicum.stats.dto.StatsRequestParamsDto;
 
-
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static com.querydsl.core.group.GroupBy.groupBy;
 
 
 @Slf4j
@@ -66,7 +55,7 @@ public class EventServiceImpl implements EventService {
     private final StatClient statClient;
 
     private final AdminUserClient adminUserClient;
-    private final PublicLocationClient publicLocationClient;
+    private final LocationClient locationClient;
     private final EventHandler eventHandler;
     private final PrivateParticipationRequestClient privateParticipationRequestClient;
 
@@ -102,8 +91,8 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventFullDto getEventById(Long userId, Long eventId) {
-        Event event = checkAndGetEventByIdAndInitiatorId(eventId, userId);
-
+        //Event event = checkAndGetEventByIdAndInitiatorId(eventId, userId);
+        Event event = eventRepository.findById(eventId).get();
         EventFullDto eventDto = eventHandler.getEventFullDto(event);
         populateWithConfirmedRequests(List.of(event), List.of());
         populateWithStats(List.of(eventDto));
@@ -141,19 +130,24 @@ public class EventServiceImpl implements EventService {
     public EventFullDto update(Long eventId, UpdateEventAdminRequestDto updateEventAdminRequestDto) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("On Event admin update - Event doesn't exist with id: " + eventId));
-
+        log.info("этап 1 пройден");
         Category category = null;
         if (updateEventAdminRequestDto.getCategory() != null)
             category = categoriesRepository.findById(updateEventAdminRequestDto.getCategory())
                     .orElseThrow(() -> new NotFoundException("On Event admin update - Category doesn't exist with id: " +
                             updateEventAdminRequestDto.getCategory()));
+        log.info("этап 2 пройден");
+        LocationDto locationDto = locationClient.getById(event.getLocation());
+        log.info("этап 2.1 пройден");
+        log.info("Получено locationDto {}", locationDto);
 
         event = eventMapper.update(event, updateEventAdminRequestDto, category,
-                getOrCreateLocation(updateEventAdminRequestDto.getLocation()).getId());
+                locationDto.getId());
+        log.info("этап 2.2 пройден");
         calculateNewEventState(event, updateEventAdminRequestDto.getStateAction());
-
+        log.info("этап 3 пройден");
         event = eventRepository.save(event);
-
+        log.info("этап 4 пройден");
         EventFullDto eventDto = eventHandler.getEventFullDto(event);
         populateWithConfirmedRequests(List.of(event), List.of(eventDto));
         populateWithStats(List.of(eventDto));
@@ -295,7 +289,7 @@ public class EventServiceImpl implements EventService {
     }
 
     private LocationDto getOrCreateLocation(NewLocationDto newLocationDto) {
-        return publicLocationClient.getBy(newLocationDto);
+        return locationClient.getBy(newLocationDto);
     }
 
     private void calculateNewEventState(Event event, EventStateActionAdmin stateAction) {

@@ -4,15 +4,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.core.error.exception.NotFoundException;
-import ru.practicum.core.util.PagingUtil;
-
-import ru.practicum.dto.categories.CategoryDto;
-import ru.practicum.dto.categories.NewCategoryDto;
 import ru.practicum.categories.mapper.CategoryMapper;
 import ru.practicum.categories.model.Category;
 import ru.practicum.categories.repository.CategoriesRepository;
-
+import ru.practicum.core.error.exception.NotFoundException;
+import ru.practicum.core.util.PagingUtil;
+import ru.practicum.dto.categories.CategoryDto;
+import ru.practicum.dto.categories.NewCategoryDto;
 
 import java.util.List;
 

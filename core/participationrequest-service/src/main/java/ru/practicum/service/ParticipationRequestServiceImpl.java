@@ -6,24 +6,25 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.repository.core.support.RepositoryMethodInvocationListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import ru.practicum.clients.event.PrivateEventClient;
+import ru.practicum.clients.event.EventClient;
 import ru.practicum.clients.user.AdminUserClient;
 import ru.practicum.core.error.exception.ConflictDataException;
 import ru.practicum.core.error.exception.NotFoundException;
-import ru.practicum.dto.event.*;
+import ru.practicum.dto.event.EventFullDto;
+import ru.practicum.dto.event.EventRequestStatusUpdateRequestDto;
+import ru.practicum.dto.event.EventRequestStatusUpdateResultDto;
+import ru.practicum.dto.event.EventStates;
 import ru.practicum.dto.participationrequest.ParticipationRequestDto;
+import ru.practicum.dto.participationrequest.ParticipationRequestStatus;
 import ru.practicum.dto.user.UserDto;
 import ru.practicum.mapper.ParticipationRequestMapper;
 import ru.practicum.model.ParticipationRequest;
-import ru.practicum.dto.participationrequest.ParticipationRequestStatus;
 import ru.practicum.repository.ParticipationRequestRepository;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.querydsl.core.group.GroupBy.groupBy;
 
 @Slf4j
 @Service
@@ -33,7 +34,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     private final ParticipationRequestRepository participationRequestRepository;
     private final ParticipationRequestMapper participationRequestMapper;
     private final AdminUserClient userClient;
-    private final PrivateEventClient privateEventClient;
+    private final EventClient eventClient;
     private final EntityManager entityManager;
     private final RepositoryMethodInvocationListener repositoryMethodInvocationListener;
 
@@ -45,7 +46,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     @Transactional
     public ParticipationRequestDto create(Long userId, Long eventId) {
         UserDto requester = checkAndGetUserById(userId);
-        EventFullDto event = privateEventClient.getEvent(userId, eventId);
+        EventFullDto event = eventClient.getEvent(userId, eventId);
 
         if (!event.getState().equals(EventStates.PUBLISHED))
             throw new ConflictDataException("On part. request create - " +
@@ -121,8 +122,11 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
     @Override
     public ParticipationRequestDto getParticipationRequestsByRequest(Long requestId) {
-        return participationRequestMapper.toDto(participationRequestRepository.findById(requestId)
+        log.info("Начал работать метод getParticipationRequestsByRequest, на вход пришло requestId{}", requestId);
+        ParticipationRequestDto requestDto = participationRequestMapper.toDto(participationRequestRepository.findById(requestId)
                 .orElseThrow(() -> new NotFoundException("Запроса нет")));
+        log.info(" Нашли в репозитории {}", requestDto);
+        return requestDto;
     }
 
     @Override

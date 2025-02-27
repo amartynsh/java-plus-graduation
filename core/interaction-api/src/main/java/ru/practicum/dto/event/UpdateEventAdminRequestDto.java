@@ -12,7 +12,6 @@ import ru.practicum.core.util.DateTimeUtil;
 import ru.practicum.core.validation.NullOrNotBlank;
 import ru.practicum.dto.location.NewLocationDto;
 
-
 import java.time.LocalDateTime;
 
 @Data

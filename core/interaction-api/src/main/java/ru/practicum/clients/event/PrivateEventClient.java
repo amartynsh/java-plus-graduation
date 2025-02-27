@@ -1,3 +1,4 @@
+/*
 package ru.practicum.clients.event;
 
 
@@ -13,7 +14,7 @@ import ru.practicum.dto.participationrequest.ParticipationRequestDto;
 
 import java.util.List;
 
-@FeignClient(name = "private-event-client")
+@FeignClient(name = "event-service-private-event")
 public interface PrivateEventClient {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(path = "/users/{userId}/events")
@@ -47,4 +48,4 @@ public interface PrivateEventClient {
                                                                        @PathVariable("eventId") Long eventId,
                                                                        @RequestBody EventRequestStatusUpdateRequestDto request);
 
-}
+}*/

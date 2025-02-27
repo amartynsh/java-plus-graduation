@@ -1,3 +1,4 @@
+/*
 package ru.practicum.clients.compilation;
 
 import jakarta.validation.Valid;
@@ -8,7 +9,7 @@ import ru.practicum.dto.compilation.CompilationDto;
 import ru.practicum.dto.compilation.CompilationRequestDto;
 import ru.practicum.dto.compilation.UpdateCompilationRequestDto;
 
-@FeignClient(name = "addmin-compilation-event")
+@FeignClient(name = "event-service-admin-compilation")
 public interface AdminCompilationClient {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -21,4 +22,4 @@ public interface AdminCompilationClient {
     @DeleteMapping("/{compId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void delete(@PathVariable(name = "compId") Long compilationId);
-}
+}*/

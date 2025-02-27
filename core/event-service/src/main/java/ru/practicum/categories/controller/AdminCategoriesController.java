@@ -5,17 +5,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import ru.practicum.clients.categories.AdminCategoriesClient;
+import ru.practicum.categories.service.CategoriesService;
 import ru.practicum.dto.categories.CategoryDto;
 import ru.practicum.dto.categories.NewCategoryDto;
-import ru.practicum.categories.service.CategoriesService;
 
 @Validated
 @RequestMapping("/admin/categories")
 @RequiredArgsConstructor
 @RestController
-public class AdminCategoriesController implements AdminCategoriesClient {
+public class AdminCategoriesController {
     private final CategoriesService categoriesService;
 
     @ResponseStatus(HttpStatus.CREATED)

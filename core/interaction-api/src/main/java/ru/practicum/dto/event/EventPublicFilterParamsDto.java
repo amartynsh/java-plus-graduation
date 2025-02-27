@@ -6,7 +6,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 import ru.practicum.core.util.DateTimeUtil;
 import ru.practicum.core.validation.DateTimeRange;
 
-
 import java.time.LocalDateTime;
 import java.util.List;
 

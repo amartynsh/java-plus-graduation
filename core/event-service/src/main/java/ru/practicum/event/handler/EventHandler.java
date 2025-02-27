@@ -1,16 +1,12 @@
 package ru.practicum.event.handler;
 
 
-import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
-import ru.practicum.clients.location.PublicLocationClient;
+import ru.practicum.clients.location.LocationClient;
 import ru.practicum.clients.user.AdminUserClient;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.dto.location.LocationDto;
-import ru.practicum.dto.user.UserDto;
 import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.event.mapper.EventMapper;
 import ru.practicum.event.model.Event;
@@ -23,19 +19,19 @@ import java.util.Objects;
 public class EventHandler {
 
     private final AdminUserClient adminUserClient;
-    private final PublicLocationClient publicLocationClient;
+    private final LocationClient locationClient;
     private final EventMapper eventMapper;
 
-    public EventHandler(AdminUserClient adminUserClient, PublicLocationClient publicLocationClient, EventMapper eventMapper) {
+    public EventHandler(AdminUserClient adminUserClient, LocationClient locationClient, EventMapper eventMapper) {
         this.adminUserClient = adminUserClient;
-        this.publicLocationClient = publicLocationClient;
+        this.locationClient = locationClient;
         this.eventMapper = eventMapper;
     }
 
     public EventFullDto getEventFullDto(Event event) {
         EventFullDto eventFullDto = new EventFullDto();
         UserShortDto userShortDto = eventMapper.toUserShortDto(adminUserClient.getById(event.getInitiator()));
-        LocationDto locationDto = publicLocationClient.getById(event.getLocation());
+        LocationDto locationDto = locationClient.getById(event.getLocation());
         return eventMapper.toFullDto(event, locationDto, userShortDto);
     }
 
@@ -91,7 +87,7 @@ public class EventHandler {
     EventShortDto getEventShortDto(Event event) {
         EventShortDto eventShortDto = new EventFullDto();
         UserShortDto userShortDto = eventMapper.toUserShortDto(adminUserClient.getById(event.getInitiator()));
-        LocationDto locationDto = publicLocationClient.getById(event.getLocation());
+        LocationDto locationDto = locationClient.getById(event.getLocation());
         return eventMapper.toFullDto(event, locationDto, userShortDto);
     }
 }

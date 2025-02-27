@@ -6,7 +6,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.proxy.HibernateProxy;
 import ru.practicum.dto.participationrequest.ParticipationRequestStatus;
 
-
 import java.time.LocalDateTime;
 import java.util.Objects;
 

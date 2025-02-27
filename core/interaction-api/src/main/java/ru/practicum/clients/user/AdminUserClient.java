@@ -11,21 +11,21 @@ import ru.practicum.dto.user.UserRequestDto;
 
 import java.util.List;
 
-@FeignClient(name = "admin-user-service")
+@FeignClient(name = "user-service")
 public interface AdminUserClient {
-    @GetMapping
+    @GetMapping("/admin/users")
     public List<UserDto> getUsers(@RequestParam(required = false) List<Long> ids,
                                   @PositiveOrZero @RequestParam(defaultValue = "0") Integer from,
                                   @Positive @RequestParam(defaultValue = "10") Integer size);
 
-    @PostMapping
+    @PostMapping("/admin/users")
     @ResponseStatus(HttpStatus.CREATED)
     UserDto registerUser(@RequestBody @Valid UserRequestDto userRequestDto);
 
-    @DeleteMapping("/{userId}")
+    @DeleteMapping("/admin/users/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void delete(@PathVariable(name = "userId") Long userId);
 
-    @GetMapping("/{userId}")
+    @GetMapping("/admin/users/{userId}")
     UserDto getById(@PathVariable(name = "userId") Long userId);
 }

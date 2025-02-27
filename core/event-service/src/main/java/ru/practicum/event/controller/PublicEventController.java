@@ -6,7 +6,6 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.clients.event.PublicEventClient;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.EventPublicFilterParamsDto;
 import ru.practicum.dto.event.EventShortDto;
@@ -17,7 +16,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(path = "/events")
-public class PublicEventController implements PublicEventClient {
+public class PublicEventController {
     private final EventService eventService;
 
     @GetMapping("/{id}")

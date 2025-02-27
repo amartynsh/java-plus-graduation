@@ -5,9 +5,8 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.clients.event.AdminEventClient;
-import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.EventAdminFilterParamsDto;
+import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.UpdateEventAdminRequestDto;
 import ru.practicum.event.service.EventService;
 
@@ -16,7 +15,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(path = "/admin/events")
-public class AdminEventController implements AdminEventClient {
+public class AdminEventController {
     private final EventService eventService;
 
     @PatchMapping("/{eventId}")

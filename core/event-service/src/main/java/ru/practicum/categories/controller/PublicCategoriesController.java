@@ -5,10 +5,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import ru.practicum.clients.categories.PublicCategoriesClient;
-import ru.practicum.dto.categories.CategoryDto;
 import ru.practicum.categories.service.CategoriesService;
+import ru.practicum.dto.categories.CategoryDto;
 
 import java.util.List;
 
@@ -17,7 +15,7 @@ import java.util.List;
 @RequestMapping("/categories")
 @RequiredArgsConstructor
 @RestController
-public class PublicCategoriesController implements PublicCategoriesClient {
+public class PublicCategoriesController {
     private final CategoriesService categoriesService;
 
     @GetMapping

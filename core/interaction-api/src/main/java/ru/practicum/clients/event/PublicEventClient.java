@@ -1,3 +1,4 @@
+/*
 package ru.practicum.clients.event;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,7 +15,7 @@ import ru.practicum.dto.event.EventShortDto;
 
 import java.util.List;
 
-@FeignClient(name = "public-event-client")
+@FeignClient(name = "event-service-public-event")
 public interface PublicEventClient {
 
     @GetMapping("/{id}")
@@ -25,4 +26,4 @@ public interface PublicEventClient {
                             @PositiveOrZero @RequestParam(defaultValue = "0") int from,
                             @Positive @RequestParam(defaultValue = "10") int size,
                             HttpServletRequest request);
-}
+}*/

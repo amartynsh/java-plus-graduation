@@ -5,7 +5,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.dto.participationrequest.ParticipationRequestDto;
 
-
 import java.util.List;
 
 @Data

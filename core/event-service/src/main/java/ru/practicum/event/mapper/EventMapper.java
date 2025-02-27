@@ -3,7 +3,6 @@ package ru.practicum.event.mapper;
 import org.mapstruct.*;
 import ru.practicum.categories.model.Category;
 import ru.practicum.dto.event.*;
-
 import ru.practicum.dto.location.LocationDto;
 import ru.practicum.dto.user.UserDto;
 import ru.practicum.dto.user.UserShortDto;

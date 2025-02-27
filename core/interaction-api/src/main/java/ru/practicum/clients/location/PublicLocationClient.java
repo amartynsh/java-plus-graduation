@@ -1,3 +1,4 @@
+/*
 package ru.practicum.clients.location;
 
 import org.springframework.cloud.openfeign.FeignClient;
@@ -20,3 +21,4 @@ public interface PublicLocationClient {
     LocationDto getBy(@RequestBody NewLocationDto newLocationDto);
 
 }
+*/

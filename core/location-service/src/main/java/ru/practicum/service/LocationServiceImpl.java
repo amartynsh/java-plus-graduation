@@ -6,7 +6,6 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import ru.practicum.core.error.exception.NotFoundException;
 import ru.practicum.core.util.PagingUtil;
 import ru.practicum.dto.location.LocationDto;
@@ -70,7 +69,7 @@ public class LocationServiceImpl implements LocationService {
         locationRepository.deleteById(locationId);
         log.info("Location deleted with id: {}", locationId);
     }
-
+    @Transactional
     @Override
     public LocationDto findLocationBy(NewLocationDto newLocationDto) {
         log.info("start findLocationById");
@@ -78,10 +77,12 @@ public class LocationServiceImpl implements LocationService {
         Optional<Location> location = locationRepository.findByLatAndLon(newLocationDto.getLat(), newLocationDto.getLon());
         Location newLocation;
         if (!location.isPresent()) {
+            log.info("местоположение не найдено, сохраняем");
             newLocation = locationRepository.save(locationMapper.toLocation(newLocationDto));
         } else {
             newLocation = location.get();
         }
+        log.info("findLocationBy result location = {}", newLocation);
         return locationMapper.toDto(newLocation);
     }
 

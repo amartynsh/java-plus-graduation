@@ -1,3 +1,4 @@
+/*
 package ru.practicum.clients.location;
 
 
@@ -21,3 +22,4 @@ public interface AdminLocationClient {
     public void delete(@PathVariable(name = "locationId") Long locationId);
 
 }
+*/

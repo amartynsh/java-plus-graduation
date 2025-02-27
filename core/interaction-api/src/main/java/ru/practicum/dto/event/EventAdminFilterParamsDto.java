@@ -3,7 +3,6 @@ package ru.practicum.dto.event;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.format.annotation.DateTimeFormat;
-
 import ru.practicum.core.util.DateTimeUtil;
 import ru.practicum.core.validation.DateTimeRange;
 

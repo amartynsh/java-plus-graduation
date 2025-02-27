@@ -1,3 +1,4 @@
+/*
 package ru.practicum.clients.compilation;
 
 import jakarta.validation.constraints.Positive;
@@ -10,7 +11,7 @@ import ru.practicum.dto.compilation.CompilationDto;
 
 import java.util.List;
 
-@FeignClient(name = "public-compilation-event")
+@FeignClient(name = "event-service-public-compilation")
 public interface PublicCompilationClient {
     @GetMapping
     public List<CompilationDto> getCompilations(@RequestParam(required = false) Boolean pinned,
@@ -20,3 +21,4 @@ public interface PublicCompilationClient {
     @GetMapping("/{compId}")
     public CompilationDto getById(@PathVariable(name = "compId") Long compilationId);
 }
+*/

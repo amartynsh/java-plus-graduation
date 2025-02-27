@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import ru.practicum.event.model.Event;
 
-
 import java.util.List;
 
 @Entity

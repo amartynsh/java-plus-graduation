@@ -6,8 +6,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import ru.practicum.clients.compilation.PublicCompilationClient;
 import ru.practicum.compilation.service.CompilationService;
 import ru.practicum.dto.compilation.CompilationDto;
 
@@ -18,7 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Validated
 @Slf4j
-public class PublicCompilationController implements PublicCompilationClient {
+public class PublicCompilationController  {
     private final CompilationService compilationService;
 
     @GetMapping

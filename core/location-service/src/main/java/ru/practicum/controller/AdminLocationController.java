@@ -6,8 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import ru.practicum.clients.location.AdminLocationClient;
 import ru.practicum.dto.location.LocationDto;
 import ru.practicum.dto.location.NewLocationDto;
 import ru.practicum.dto.location.UpdateLocationAdminRequestDto;
@@ -18,7 +16,7 @@ import ru.practicum.service.LocationService;
 @RequiredArgsConstructor
 @Validated
 @Slf4j
-public class AdminLocationController implements AdminLocationClient {
+public class AdminLocationController {
     private final LocationService locationService;
 
     @PostMapping

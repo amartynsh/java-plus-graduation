@@ -1,3 +1,4 @@
+/*
 package ru.practicum.clients.event;
 
 
@@ -12,7 +13,7 @@ import ru.practicum.dto.event.UpdateEventAdminRequestDto;
 
 import java.util.List;
 
-@FeignClient(name = "admin-event-client")
+@FeignClient(name = "event-service-admin-event")
 
 public interface AdminEventClient {
     @PatchMapping("/{eventId}")
@@ -25,3 +26,4 @@ public interface AdminEventClient {
                            @Positive @RequestParam(defaultValue = "10") int size);
 }
 
+*/

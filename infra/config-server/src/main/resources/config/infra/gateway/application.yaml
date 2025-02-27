@@ -6,6 +6,21 @@ spring:
     gateway:
       discovery.locator.enabled: true
       routes:
+        - id: participant_service_route
+          uri: lb://participation-service
+          predicates:
+            - Path=/users/*/requests/**, /users/participationrequest/**, /users/requests/**
+          filters:
+            - name: Retry
+              args:
+                retries: 3
+                statuses: NOT_FOUND
+                backoff:
+                  firstBackoff: 10ms
+                  maxBackoff: 50ms
+                  factor: 2
+                  basedOnPreviousValue: false
+
         - id: location_service_route
           uri: lb://location-service
           predicates:
@@ -34,8 +49,40 @@ spring:
                   maxBackoff: 50ms
                   factor: 2
                   basedOnPreviousValue: false
-        - id: categories_service_route
-          uri: lb://categories-service
+
+        - id: event_service_route
+          uri: lb://event-service
+          predicates:
+            - Path=/admin/events/**, /users/*/events/**, /events/**
+          filters:
+            - name: Retry
+              args:
+                retries: 3
+                statuses: NOT_FOUND
+                backoff:
+                  firstBackoff: 10ms
+                  maxBackoff: 50ms
+                  factor: 2
+                  basedOnPreviousValue: false
+
+
+        - id: compilation_event_service_route
+          uri: lb://event-service
+          predicates:
+            - Path=/admin/compilations/**, /compilations/**
+          filters:
+            - name: Retry
+              args:
+                retries: 3
+                statuses: NOT_FOUND
+                backoff:
+                  firstBackoff: 10ms
+                  maxBackoff: 50ms
+                  factor: 2
+                  basedOnPreviousValue: false
+
+        - id: categories_event_service_route
+          uri: lb://event-service
           predicates:
             - Path=/admin/categories/**, /categories/**
           filters:

@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.clients.location.PublicLocationClient;
+
 import ru.practicum.dto.location.LocationDto;
 import ru.practicum.dto.location.NewLocationDto;
 import ru.practicum.service.LocationService;
@@ -16,7 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Validated
 @Slf4j
-public class PublicLocationController implements PublicLocationClient {
+public class PublicLocationController  {
     private final LocationService locationService;
 
     @GetMapping
@@ -32,7 +32,6 @@ public class PublicLocationController implements PublicLocationClient {
         return locationService.getById(locationId);
     }
 
-    @Override
     @PostMapping
     public LocationDto getBy(@RequestBody NewLocationDto newLocationDto) {
         return locationService.findLocationBy(newLocationDto);
