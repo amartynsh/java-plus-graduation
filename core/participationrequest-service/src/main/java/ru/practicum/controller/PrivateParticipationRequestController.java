@@ -40,9 +40,9 @@ public class PrivateParticipationRequestController implements PrivateParticipati
         return participationRequestService.getEventAllParticipationRequests(eventId, status);
     }
 
-    @GetMapping
-    public ParticipationRequestDto getParticipationRequestsBy(@RequestParam(name = "requestId") Long requestId) {
-        return participationRequestService.getEventAllParticipationRequestsBy(requestId);
+    @GetMapping("/participationrequest/{requestId}")
+    public ParticipationRequestDto getParticipationRequestsByRequest(@PathVariable Long requestId) {
+        return participationRequestService.getParticipationRequestsByRequest(requestId);
     }
 
     @PatchMapping("/requests/{requestId}")
@@ -57,5 +57,10 @@ public class PrivateParticipationRequestController implements PrivateParticipati
                                                               @RequestParam(name = "participantsLimit") int participantsLimit,
                                                               @RequestBody EventRequestStatusUpdateRequestDto statusUpdateRequest) {
         return participationRequestService.changeEventState(userId, eventId, statusUpdateRequest, participantsLimit);
+    }
+
+    @PostMapping("/participations/confirmed")
+    public List<ParticipationRequestDto> findConfirmedRequestsByEventIds(@RequestBody List<Long> eventIds) {
+        return participationRequestService.confirmedRequestsByEventList(eventIds);
     }
 }

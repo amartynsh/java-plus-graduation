@@ -1,7 +1,9 @@
 package ru.practicum.service;
 
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.repository.core.support.RepositoryMethodInvocationListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -9,10 +11,7 @@ import ru.practicum.clients.event.PrivateEventClient;
 import ru.practicum.clients.user.AdminUserClient;
 import ru.practicum.core.error.exception.ConflictDataException;
 import ru.practicum.core.error.exception.NotFoundException;
-import ru.practicum.dto.event.EventFullDto;
-import ru.practicum.dto.event.EventRequestStatusUpdateRequestDto;
-import ru.practicum.dto.event.EventRequestStatusUpdateResultDto;
-import ru.practicum.dto.event.EventStates;
+import ru.practicum.dto.event.*;
 import ru.practicum.dto.participationrequest.ParticipationRequestDto;
 import ru.practicum.dto.user.UserDto;
 import ru.practicum.mapper.ParticipationRequestMapper;
@@ -24,6 +23,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.querydsl.core.group.GroupBy.groupBy;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -33,6 +34,8 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     private final ParticipationRequestMapper participationRequestMapper;
     private final AdminUserClient userClient;
     private final PrivateEventClient privateEventClient;
+    private final EntityManager entityManager;
+    private final RepositoryMethodInvocationListener repositoryMethodInvocationListener;
 
     private UserDto checkAndGetUserById(Long userId) {
         return userClient.getById(userId);
@@ -117,7 +120,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     }
 
     @Override
-    public ParticipationRequestDto getEventAllParticipationRequestsBy(Long requestId) {
+    public ParticipationRequestDto getParticipationRequestsByRequest(Long requestId) {
         return participationRequestMapper.toDto(participationRequestRepository.findById(requestId)
                 .orElseThrow(() -> new NotFoundException("Запроса нет")));
     }
@@ -128,15 +131,6 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         request.setStatus(ParticipationRequestStatus.valueOf(status.toUpperCase()));
 
     }
-
-
-
-
-
-
-
-
-
 
 
     /// //!! Новый метод  - перенёс из эвента
@@ -197,5 +191,13 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         return null;
     }
 
+    @Override
+    public List<ParticipationRequestDto> confirmedRequestsByEventList(List<Long> events) {
+        // Загружаем все подтвержденные запросы для указанных событий
+        List<ParticipationRequest> confirmedRequests =
+                participationRequestRepository.findConfirmedRequestsByEventIds(ParticipationRequestStatus.CONFIRMED, events);
+        return confirmedRequests.stream().map(participationRequestMapper::toDto).toList();
+
+    }
 
 }

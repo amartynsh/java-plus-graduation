@@ -17,11 +17,13 @@ public interface ParticipationRequestService {
 
     List<ParticipationRequestDto> getEventAllParticipationRequests(Long eventId, String status);
 
-    ParticipationRequestDto getEventAllParticipationRequestsBy(Long requestId);
+    ParticipationRequestDto getParticipationRequestsByRequest(Long requestId);
 
     void updateStatus(Long requestId, String status);
 
     EventRequestStatusUpdateResultDto changeEventState(Long userId, Long eventId,
                                                        EventRequestStatusUpdateRequestDto statusUpdateRequest,
                                                        int participantsLimit);
+
+    List<ParticipationRequestDto> confirmedRequestsByEventList(List<Long> events);
 }

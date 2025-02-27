@@ -2,13 +2,6 @@ package ru.practicum.event.service;
 
 
 import com.querydsl.core.BooleanBuilder;
-import com.querydsl.core.Tuple;
-import com.querydsl.core.types.Expression;
-import com.querydsl.core.types.dsl.CaseBuilder;
-import com.querydsl.core.types.dsl.Expressions;
-import com.querydsl.jpa.JPQLTemplates;
-import com.querydsl.jpa.impl.JPAQuery;
-import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
@@ -79,7 +72,7 @@ public class EventServiceImpl implements EventService {
 
 
     private Event checkAndGetEventByIdAndInitiatorId(Long eventId, Long initiatorId) {
-        return eventRepository.findByIdAndInitiator_Id(eventId, initiatorId)
+        return eventRepository.findByIdAndInitiator(eventId, initiatorId)
                 .orElseThrow(() -> new NotFoundException(String.format("On event operations - " +
                         "Event doesn't exist with id %s or not available for User with id %s: ", eventId, initiatorId)));
     }
@@ -97,7 +90,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<EventShortDto> getEventsByUserId(Long id, int from, int size) {
         PageRequest page = PagingUtil.pageOf(from, size).withSort(Sort.by(Sort.Order.desc("eventDate")));
-        List<Event> events = eventRepository.findAllByInitiator_Id(id, page);
+        List<Event> events = eventRepository.findAllByInitiator(id, page);
 
         List<EventShortDto> eventsDto = eventHandler.getListEventShortDto(events);
 
@@ -244,13 +237,13 @@ public class EventServiceImpl implements EventService {
                 builder.and(qEvent.eventDate.loe(filters.getRangeEnd()));
         }
 
-        if (filters.getLon() != null && filters.getLat() != null)
+/*        if (filters.getLon() != null && filters.getLat() != null)
             builder.and(Expressions.booleanTemplate("distance({0}, {1}, {2}, {3}) <= {4}",
                     qEvent.location.lat,
                     qEvent.location.lon,
                     filters.getLat(),
                     filters.getLon(),
-                    filters.getRadius()));
+                    filters.getRadius()));*/
 
         PageRequest page = PagingUtil.pageOf(from, size);
         if (filters.getSort() != null && filters.getSort() == EventPublicFilterParamsDto.EventSort.EVENT_DATE)
@@ -366,35 +359,47 @@ public class EventServiceImpl implements EventService {
         populateWithConfirmedRequests(events, eventsDto, null);
     }
 
-    private void populateWithConfirmedRequests(List<Event> events, List<? extends EventShortDto> eventsDto, Boolean filterOnlyAvailable) {
-        QParticipationRequest qRequest = QParticipationRequest.participationRequest;
-        BooleanBuilder requestBuilder = new BooleanBuilder();
-        requestBuilder.and(qRequest.status.eq(ParticipationRequestStatus.CONFIRMED)).and(qRequest.event.in(events));
+    private void populateWithConfirmedRequests(List<Event> events, List<? extends EventShortDto> eventsDto,
+                                               Boolean filterOnlyAvailable) {
 
-        JPAQueryFactory jpaQueryFactory = new JPAQueryFactory(JPQLTemplates.DEFAULT, entityManager);
 
-        Expression<Long> countExpression = qRequest.count();
+        List<ParticipationRequestDto> confirmedRequests = privateParticipationRequestClient
+                .findConfirmedRequestsByEventIds(events.stream().map(Event::getId).toList());
 
-        if (filterOnlyAvailable != null && filterOnlyAvailable) {
-            countExpression = new CaseBuilder()
-                    .when(qRequest.event.participantLimit.eq(0)
-                            .or(qRequest.event.participantLimit.gt(qRequest.count()))).then(qRequest.count())
-                    .otherwise(-1L);
+
+        Map<Long, Long> confirmedRequestsCountByEventId = confirmedRequests.stream()
+                .collect(Collectors.groupingBy(
+                        ParticipationRequestDto::getEvent,
+                        Collectors.counting()
+                ));
+
+        // Обрабатываем каждое событие в eventsDto
+
+
+        for (var eventDto : eventsDto) {
+            Long eventId = eventDto.getId();
+            Long confirmedRequestsCount = confirmedRequestsCountByEventId.getOrDefault(eventId, 0L);
+
+            // Если включена фильтрация по доступности
+            if (filterOnlyAvailable != null && filterOnlyAvailable) {
+                // Загружаем событие, чтобы получить participantLimit
+                Event event = eventRepository.findById(eventId).orElse(null);
+                if (event != null) {
+                    int participantLimit = event.getParticipantLimit();
+                    // Проверяем доступность
+                    if (participantLimit != 0 && confirmedRequestsCount >= participantLimit) {
+                        confirmedRequestsCount = -1L; // Событие недоступно
+                    }
+                }
+            }
+
+            // Устанавливаем количество подтвержденных запросов
+            eventDto.setConfirmedRequests(confirmedRequestsCount);
         }
 
-        JPAQuery<Tuple> query = jpaQueryFactory.selectFrom(qRequest)
-                .select(qRequest.event.id, countExpression)
-                .where(requestBuilder)
-                .groupBy(qRequest.event.id, qRequest.event.participantLimit);
-
-        Map<Long, Long> confirmedRequests = query
-                .transform(groupBy(qRequest.event.id).as(countExpression));
-
-        eventsDto
-                .forEach(event -> event.setConfirmedRequests(confirmedRequests.getOrDefault(event.getId(), 0L)));
-
+        // Если включена фильтрация по доступности, удаляем недоступные события
         if (filterOnlyAvailable != null && filterOnlyAvailable) {
-            eventsDto.removeIf(event -> event.getConfirmedRequests() < 0);
+            eventsDto.removeIf(eventDto -> eventDto.getConfirmedRequests() < 0);
         }
     }
 

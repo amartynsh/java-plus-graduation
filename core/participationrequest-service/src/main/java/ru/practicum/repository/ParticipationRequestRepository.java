@@ -11,7 +11,6 @@ import ru.practicum.dto.participationrequest.ParticipationRequestStatus;
 
 
 import java.util.List;
-import java.util.Optional;
 
 public interface ParticipationRequestRepository extends JpaRepository<ParticipationRequest, Long>,
         QuerydslPredicateExecutor<ParticipationRequest> {
@@ -25,5 +24,9 @@ public interface ParticipationRequestRepository extends JpaRepository<Participat
 
     List<ParticipationRequest> findAllByEventAndStatus(Long eventId, ParticipationRequestStatus status);
 
-   // Optional<ParticipationRequest> findById(Long requestId);
+    // Optional<ParticipationRequest> findById(Long requestId);
+    @Query("SELECT pr FROM ParticipationRequest pr " +
+            "WHERE pr.status = :status AND pr.event IN :events")
+    List<ParticipationRequest> findConfirmedRequestsByEventIds(@Param("status") ParticipationRequestStatus status,
+                                                               @Param("events") List<Long> events);
 }
