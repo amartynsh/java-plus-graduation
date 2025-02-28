@@ -107,11 +107,4 @@ public class EventHandler {
         }
         return eventsDto;
     }
-
-    EventShortDto getEventShortDto(Event event) {
-        EventShortDto eventShortDto = new EventFullDto();
-        UserShortDto userShortDto = eventMapper.toUserShortDto(adminUserClient.getById(event.getInitiator()));
-        LocationDto locationDto = locationClient.getById(event.getLocation());
-        return eventMapper.toFullDto(event, locationDto, userShortDto);
-    }
 }
