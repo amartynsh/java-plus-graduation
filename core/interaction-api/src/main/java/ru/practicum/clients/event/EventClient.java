@@ -24,4 +24,8 @@ public interface EventClient {
     //Получение полной информации о событии добавленном текущим пользователем
     @GetMapping(path = "/users/{userId}/events/{eventId}")
     EventFullDto getEvent(@PathVariable("userId") Long userId, @PathVariable("eventId") Long eventId);
+
+
+    @GetMapping("/admin/events/locations")
+    Boolean get(@RequestParam Long locationId);
 }

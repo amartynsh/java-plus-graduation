@@ -6,7 +6,8 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 
 @EnableFeignClients
 @SpringBootApplication
-public class ParticipationApp {
+public class
+ParticipationApp {
     public static void main(String[] args) {
         SpringApplication.run(ParticipationApp.class, args);
     }

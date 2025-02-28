@@ -38,4 +38,20 @@ public class UpdateEventAdminRequestDto {
     @Size(min = 3, max = 120)
     private String title;
     private EventStateActionAdmin stateAction;
+
+    @Override
+    public String toString() {
+        return "UpdateEventAdminRequestDto{" +
+                "annotation='" + annotation + '\'' +
+                ", category=" + category +
+                ", description='" + description + '\'' +
+                ", eventDate=" + eventDate +
+                ", location=" + location +
+                ", paid=" + paid +
+                ", participantLimit=" + participantLimit +
+                ", requestModeration=" + requestModeration +
+                ", title='" + title + '\'' +
+                ", stateAction=" + stateAction +
+                '}';
+    }
 }

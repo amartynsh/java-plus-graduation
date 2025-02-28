@@ -1,9 +1,7 @@
 package ru.practicum.service;
 
-import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.repository.core.support.RepositoryMethodInvocationListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.clients.event.EventClient;
@@ -35,8 +33,6 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     private final ParticipationRequestMapper participationRequestMapper;
     private final AdminUserClient userClient;
     private final EventClient eventClient;
-    private final EntityManager entityManager;
-    private final RepositoryMethodInvocationListener repositoryMethodInvocationListener;
 
     private UserDto checkAndGetUserById(Long userId) {
         return userClient.getById(userId);
@@ -203,5 +199,9 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         return confirmedRequests.stream().map(participationRequestMapper::toDto).toList();
 
     }
+
+    /*public List<Long> checkAvialibleForRegistrationEvents(List<Long> events) {
+
+    }*/
 
 }

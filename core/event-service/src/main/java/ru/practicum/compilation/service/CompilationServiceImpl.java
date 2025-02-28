@@ -29,10 +29,10 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Transactional(readOnly = true)
 public class CompilationServiceImpl implements CompilationService {
-    private final   CompilationRepository compilationRepository;
-    private final  EventRepository eventRepository;
-    private final  CompilationMapper compilationMapper;
-    private final  EventMapper eventMapper;
+    private final CompilationRepository compilationRepository;
+    private final EventRepository eventRepository;
+    private final CompilationMapper compilationMapper;
+    private final EventMapper eventMapper;
     private final EventHandler eventHandler;
 
     @Override
@@ -52,7 +52,7 @@ public class CompilationServiceImpl implements CompilationService {
                 String.format("Подборка с ид %s не найдена", compilationId))
         );
         log.info("getById result compilation = {}", compilation);
-        return compilationMapper.toDto(compilation,eventHandler.getListEventShortDto(compilation.getEvents()));
+        return compilationMapper.toDto(compilation, eventHandler.getListEventShortDto(compilation.getEvents()));
     }
 
     @Override
@@ -63,7 +63,7 @@ public class CompilationServiceImpl implements CompilationService {
         List<Event> events = getAndCheckEventList(compilationRequestDto.getEvents());
         Compilation compilation = compilationRepository.save(compilationMapper.toEntity(compilationRequestDto, events));
         log.info("addCompilation result compilation = {}", compilation);
-        return compilationMapper.toDto(compilation,eventHandler.getListEventShortDto(compilation.getEvents()));
+        return compilationMapper.toDto(compilation, eventHandler.getListEventShortDto(compilation.getEvents()));
     }
 
     @Override

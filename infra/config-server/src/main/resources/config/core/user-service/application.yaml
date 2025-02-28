@@ -10,5 +10,5 @@ spring:
     init.mode: always
   datasource:
     url: jdbc:postgresql://localhost:5432/user-service
-    username: dbuser
-    password: 12345
+    username: root
+    password: root

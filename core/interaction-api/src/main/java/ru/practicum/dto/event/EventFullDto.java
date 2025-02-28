@@ -27,4 +27,17 @@ public class EventFullDto extends EventShortDto {
     @JsonFormat(pattern = DateTimeUtil.DATE_TIME_FORMAT)
     private LocalDateTime publishedOn;
 
+
+    @Override
+    public String toString() {
+        return "EventFullDto{" +
+                "location=" + location +
+                ", participantLimit=" + participantLimit +
+                ", requestModeration=" + requestModeration +
+                ", state=" + state +
+                ", createdOn=" + createdOn +
+                ", publishedOn=" + publishedOn +
+                ", description='" + description + '\'' +
+                '}';
+    }
 }

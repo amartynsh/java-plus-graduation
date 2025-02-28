@@ -5,11 +5,12 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.core.validation.NullOrNotBlank;
 
-
+@Builder
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -28,4 +29,15 @@ public class NewLocationDto {
     @NullOrNotBlank
     @Size(min = 3, max = 1000)
     private String address;
+
+
+    @Override
+    public String toString() {
+        return "NewLocationDto{" +
+                "lat=" + lat +
+                ", lon=" + lon +
+                ", name='" + name + '\'' +
+                ", address='" + address + '\'' +
+                '}';
+    }
 }

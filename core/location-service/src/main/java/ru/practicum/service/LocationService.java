@@ -19,4 +19,6 @@ public interface LocationService {
     void delete(Long locationId);
 
     LocationDto findLocationBy(NewLocationDto newLocationDto);
+
+    List<LocationDto> getLocationByRadius(Double lat, Double lon, Double radius);
 }

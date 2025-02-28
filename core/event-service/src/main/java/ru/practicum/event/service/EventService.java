@@ -27,4 +27,6 @@ public interface EventService {
 
     EventRequestStatusUpdateResultDto changeEventState(Long userId, Long eventId,
                                                        EventRequestStatusUpdateRequestDto requestStatusUpdateRequest);
+
+    boolean checkPresentEventById(Long locationId);
 }

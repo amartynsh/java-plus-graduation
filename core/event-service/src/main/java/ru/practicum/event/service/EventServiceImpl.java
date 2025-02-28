@@ -47,10 +47,10 @@ import java.util.stream.Collectors;
 @Service
 @AllArgsConstructor
 public class EventServiceImpl implements EventService {
+    private static final String appNameForStat = "ewm-main-service";
     private final EventRepository eventRepository;
     private final CategoriesRepository categoriesRepository;
     private final EventMapper eventMapper;
-    private static final String appNameForStat = "ewm-main-service";
     private final EntityManager entityManager;
     private final StatClient statClient;
 
@@ -68,11 +68,14 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventFullDto addEvent(Long userId, NewEventDto newEventDto) {
+        log.info("Adding new event: {}", newEventDto.toString());
         checkEventTime(newEventDto.getEventDate());
         Category category = categoriesRepository.findById(newEventDto.getCategory()).get();
         UserDto user = adminUserClient.getById(userId);
+        log.info("Проверяем местоположение из запроса {}", newEventDto.getLocation());
         LocationDto location = getOrCreateLocation(newEventDto.getLocation());
         Event event = eventRepository.save(eventMapper.toEvent(newEventDto, category, user.getId(), location.getId()));
+        log.info("Сохранили событие: {}", event.toString());
         return EventToDtoMapper.eventToFullDto(event, user, location, category);
     }
 
@@ -103,15 +106,21 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventFullDto updateEvent(Long userId, Long eventId, UpdateEventUserRequestDto eventUpdateDto) {
+        log.info("eventServiceImpl.updateEvent, на вход event: {}", eventUpdateDto.toString());
         Event event = checkAndGetEventByIdAndInitiatorId(eventId, userId);
+        log.info("Из бд достали event: {}", event.toString());
 
         if (event.getState() == EventStates.PUBLISHED)
             throw new ConflictDataException(
                     String.format("On Event private update - " +
                             "Event with id %s can't be changed because it is published.", event.getId()));
         checkEventTime(eventUpdateDto.getEventDate());
-
-        eventMapper.update(event, eventUpdateDto, getOrCreateLocation(eventUpdateDto.getLocation()).getId());
+        LocationDto locationDto = locationClient.getById(event.getId());
+        if (eventUpdateDto.getLocation() != null) {
+            locationDto = getOrCreateLocation(eventUpdateDto.getLocation());
+        }
+        log.info("Значение newLocation в запросе: {}", locationDto.toString());
+        event = eventMapper.update(event, eventUpdateDto, locationDto.getId());
         if (eventUpdateDto.getStateAction() != null) {
             setStateToEvent(eventUpdateDto, event);
         }
@@ -128,26 +137,31 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventFullDto update(Long eventId, UpdateEventAdminRequestDto updateEventAdminRequestDto) {
+        log.info("Началось обновление события, на вход пришло eventId={}, updateEventAdminRequestDto ={}", eventId,
+                updateEventAdminRequestDto.toString());
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("On Event admin update - Event doesn't exist with id: " + eventId));
-        log.info("этап 1 пройден");
+        log.info("Нашли событие event={}", event.toString());
         Category category = null;
-        if (updateEventAdminRequestDto.getCategory() != null)
+        if (updateEventAdminRequestDto.getCategory() != null) {
             category = categoriesRepository.findById(updateEventAdminRequestDto.getCategory())
                     .orElseThrow(() -> new NotFoundException("On Event admin update - Category doesn't exist with id: " +
                             updateEventAdminRequestDto.getCategory()));
-        log.info("этап 2 пройден");
+            log.info("Нашли категорию category={}", category.toString());
+        }
+
+
         LocationDto locationDto = locationClient.getById(event.getLocation());
-        log.info("этап 2.1 пройден");
-        log.info("Получено locationDto {}", locationDto);
+        log.info("Получено местоположение {}", locationDto);
 
         event = eventMapper.update(event, updateEventAdminRequestDto, category,
                 locationDto.getId());
-        log.info("этап 2.2 пройден");
+        log.info("eventMapper намапил событие : {}", event.toString());
+
         calculateNewEventState(event, updateEventAdminRequestDto.getStateAction());
-        log.info("этап 3 пройден");
+
         event = eventRepository.save(event);
-        log.info("этап 4 пройден");
+
         EventFullDto eventDto = eventHandler.getEventFullDto(event);
         populateWithConfirmedRequests(List.of(event), List.of(eventDto));
         populateWithStats(List.of(eventDto));
@@ -174,6 +188,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<EventFullDto> get(EventAdminFilterParamsDto filters, int from, int size) {
+        log.info("Метод EventServiceImpl.get(filters={}, from={}, size={})", filters, from, size);
         QEvent event = QEvent.event;
 
         BooleanBuilder builder = new BooleanBuilder();
@@ -193,10 +208,13 @@ public class EventServiceImpl implements EventService {
         if (filters.getRangeEnd() != null)
             builder.and(event.eventDate.loe(filters.getRangeEnd()));
 
+        log.info("Билдер для поиска = {}", builder.toString());
         List<Event> events = eventRepository.findAll(builder,
                 PagingUtil.pageOf(from, size).withSort(new QSort(event.createdOn.desc()))).toList();
+        log.info("Нашли в репозитории список событий: {}", events.toString());
 
         List<EventFullDto> eventsDto = eventHandler.getListEventFullDto(events);
+        log.info("В обработчике обработали список событий: {}", eventsDto.toString());
         populateWithConfirmedRequests(events, eventsDto);
         populateWithStats(eventsDto);
 
@@ -205,6 +223,11 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<EventShortDto> get(EventPublicFilterParamsDto filters, int from, int size, HttpServletRequest request) {
+
+        log.info("Начали поиск сообщения по критериям filters= {}, from={}, size={} ", filters.toString(), from, size);
+        List<LocationDto> locationDtos = new ArrayList<>();
+
+
         QEvent qEvent = QEvent.event;
 
         BooleanBuilder builder = new BooleanBuilder();
@@ -214,6 +237,7 @@ public class EventServiceImpl implements EventService {
         if (filters.getText() != null)
             builder.and(qEvent.annotation.containsIgnoreCase(filters.getText())
                     .or(qEvent.description.containsIgnoreCase(filters.getText())));
+
 
         if (filters.getCategories() != null && !filters.getCategories().isEmpty())
             builder.and(qEvent.category.id.in(filters.getCategories()));
@@ -231,29 +255,55 @@ public class EventServiceImpl implements EventService {
                 builder.and(qEvent.eventDate.loe(filters.getRangeEnd()));
         }
 
-/*        if (filters.getLon() != null && filters.getLat() != null)
-            builder.and(Expressions.booleanTemplate("distance({0}, {1}, {2}, {3}) <= {4}",
-                    qEvent.location.lat,
-                    qEvent.location.lon,
-                    filters.getLat(),
-                    filters.getLon(),
-                    filters.getRadius()));*/
+        if (filters.getLon() != null && filters.getLat() != null) {
+            try {
+                locationDtos = locationClient.getByRadius(filters.getLat(), filters.getLon(), filters.getRadius());
+                builder.and(qEvent.location.in(locationDtos.stream().map(LocationDto::getId).collect(Collectors.toList())));
+            } catch (Exception e) {
+                log.info(e.getMessage());
+            }
+        }
 
         PageRequest page = PagingUtil.pageOf(from, size);
         if (filters.getSort() != null && filters.getSort() == EventPublicFilterParamsDto.EventSort.EVENT_DATE)
             page.withSort(new QSort(qEvent.eventDate.desc()));
 
+        log.info("Билдер для поиска: {}", builder.toString());
         List<Event> events = eventRepository.findAll(builder, page).toList();
+        log.info("найно событий: {}", events);
+        List<Event> eventsToDelete = new ArrayList<>();
 
-        List<EventShortDto> eventsDto = eventHandler.getListEventShortDto(events);
-        populateWithConfirmedRequests(events, eventsDto, true);
-        populateWithStats(eventsDto);
-
-        if (filters.getSort() != null && filters.getSort() == EventPublicFilterParamsDto.EventSort.VIEWS)
-            eventsDto.sort(Comparator.comparing(EventShortDto::getViews).reversed());
-
+        if (filters.getOnlyAvailable()) {
+            log.info("Сработала фильтрация по OnlyAvailable");
+            List<ParticipationRequestDto> participationRequestDtos =
+                    privateParticipationRequestClient.findConfirmedRequestsByEventIds(events.stream()
+                            .map(Event::getId)
+                            .toList());
+            log.info("Сервис регистрации вернул список: {}", participationRequestDtos.toString());
+            for (Event event : events) {
+                int confirmedParticipators = 0;
+                for (ParticipationRequestDto participationRequestDto : participationRequestDtos) {
+                    long participationRequestEventId = participationRequestDto.getEvent();
+                    log.info("Сравниваем participationRequestEventId {} == event.getId() {}", participationRequestEventId,
+                            event.getId());
+                    if (participationRequestEventId == event.getId()) {
+                        confirmedParticipators = confirmedParticipators + 1;
+                        log.info("Увеличили количество подтвержденных участников {}", confirmedParticipators);
+                    }
+                }
+                if (confirmedParticipators >= event.getParticipantLimit()) {
+                    log.info("Улаляем ивент из списка, т.к. он не доступен для регистрации");
+                    eventsToDelete.add(event);
+                }
+                log.info(" Для события {} confirmedParticipators={} и limit ={}", event.getId(), confirmedParticipators, event.getParticipantLimit());
+            }
+            events = events.stream()
+                    .filter(event -> !eventsToDelete.contains(event))
+                    .collect(Collectors.toList());
+        }
         hitStat(request);
-        return eventsDto;
+
+        return eventHandler.getListEventShortDto(events);
     }
 
     @Override
@@ -284,8 +334,11 @@ public class EventServiceImpl implements EventService {
             log.info("Заявки подтверждать не требуется");
             return null;
         }
-
-        return privateParticipationRequestClient.changeEventState(userId, eventId, participantsLimit, statusUpdateRequest);
+        try {
+            return privateParticipationRequestClient.changeEventState(userId, eventId, participantsLimit, statusUpdateRequest);
+        } catch (Exception e) {
+            throw new ConflictDataException(e.getMessage());
+        }
     }
 
     private LocationDto getOrCreateLocation(NewLocationDto newLocationDto) {
@@ -422,5 +475,10 @@ public class EventServiceImpl implements EventService {
                 .ip(request.getRemoteAddr())
                 .timestamp(DateTimeUtil.currentDateTime())
                 .build());
+    }
+
+    @Override
+    public boolean checkPresentEventById(Long locationId) {
+        return eventRepository.existsByLocation(locationId);
     }
 }

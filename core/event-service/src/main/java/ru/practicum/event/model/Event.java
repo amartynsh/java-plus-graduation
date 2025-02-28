@@ -62,4 +62,20 @@ public class Event {
                 ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode()
                 : getClass().hashCode();
     }
+
+    @Override
+    public String toString() {
+        return "Event{" +
+                "createdOn=" + createdOn +
+                ", id=" + id +
+                ", eventDate=" + eventDate +
+                ", location=" + location +
+                ", paid=" + paid +
+                ", participantLimit=" + participantLimit +
+                ", requestModeration=" + requestModeration +
+                ", initiator=" + initiator +
+                ", state=" + state +
+                ", publishedOn=" + publishedOn +
+                '}';
+    }
 }
