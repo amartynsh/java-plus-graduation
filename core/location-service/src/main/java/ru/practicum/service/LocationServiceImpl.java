@@ -87,10 +87,6 @@ public class LocationServiceImpl implements LocationService {
             newLocationDto.setLon(0.0);
         }
 
-        if (newLocationDto == null) {
-            log.info("newLocationDto is null, условие сработало");
-            return null;
-        }
         Optional<Location> location = locationRepository.findLocationByLatAndLon(newLocationDto.getLat(), newLocationDto.getLon());
         Location newLocation;
 
