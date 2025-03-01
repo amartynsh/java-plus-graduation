@@ -10,7 +10,7 @@ spring:
           searchLocations:
             - classpath:config/infra/{application}
             - classpath:config/core/{application}
-            - classpath:config/stat/{application}
+            - classpath:config/stats/{application}
 
 server:
   port: 9091
