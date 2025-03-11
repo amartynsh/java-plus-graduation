@@ -37,8 +37,9 @@ public class PublicEventController {
     public List<EventRecommendationDto> getRecommendations(@RequestHeader("X-EWM-USER-ID") long userId) {
         return eventService.getRecommendations(userId);
     }
-    @PutMapping ("/{eventId}/like")
-    public void addLike(@PathVariable Long eventId, @RequestHeader("X-EWM-USER-ID") long userId){
+
+    @PutMapping("/{eventId}/like")
+    public void addLike(@PathVariable Long eventId, @RequestHeader("X-EWM-USER-ID") long userId) {
         eventService.addLike(eventId, userId);
     }
 }
