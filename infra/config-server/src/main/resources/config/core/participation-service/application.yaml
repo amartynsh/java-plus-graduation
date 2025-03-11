@@ -12,3 +12,11 @@ spring:
     url: jdbc:postgresql://localhost:5432/participation-service
     username: root
     password: root
+
+grpc:
+  client:
+    collector:
+      address: 'discovery:///collector'
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: plaintext

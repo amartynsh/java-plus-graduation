@@ -13,7 +13,7 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface EventMapper {
     @Mapping(target = "confirmedRequests", ignore = true)
-    @Mapping(target = "views", ignore = true)
+    @Mapping(target = "rating", ignore = true)
     @Mapping(target = "id", source = "event.id")
     @Named(value = "EventShortDto")
     @Mapping(target = "initiator", source = "userShortDto")
@@ -23,7 +23,7 @@ public interface EventMapper {
     List<EventShortDto> toShortDto(Iterable<Event> event);*/
 
     @Mapping(target = "confirmedRequests", ignore = true)
-    @Mapping(target = "views", ignore = true)
+    @Mapping(target = "rating", ignore = true)
     @Mapping(target = "location", source = "locationDto")
     @Mapping(target = "initiator", source = "userShortDto")
     @Mapping(target = "id", source = "event.id")
