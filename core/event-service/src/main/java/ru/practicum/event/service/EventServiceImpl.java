@@ -483,10 +483,9 @@ public class EventServiceImpl implements EventService {
         log.info("Началось получение рекомендаций для пользователя {}", userId);
         int size = 10;
         List<RecommendedEventProto> recommendedEvents = analyzerClient.getRecommendedEventsForUser(userId, size).toList();
-        ;
 
-        List<EventRecommendationDto> eventRecommendationDtoList = null;
-        if (recommendedEvents != null) {
+        List<EventRecommendationDto> eventRecommendationDtoList = new ArrayList<>();
+        if (!recommendedEvents.isEmpty()) {
             for (RecommendedEventProto recommendedEvent : recommendedEvents) {
                 EventRecommendationDto eventRecommendationDto = new EventRecommendationDto();
                 eventRecommendationDto.setEventId(recommendedEvent.getEventId());
@@ -506,7 +505,7 @@ public class EventServiceImpl implements EventService {
         boolean isRequester = false;
         for (ParticipationRequestDto request : requests) {
 
-            if (request.getRequester() == userId) {
+            if (Objects.equals(request.getRequester(), userId)) {
                 isRequester = true;
             }
             if (isRequester) {
