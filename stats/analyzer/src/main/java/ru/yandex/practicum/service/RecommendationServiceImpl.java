@@ -99,8 +99,8 @@ public class RecommendationServiceImpl implements RecommendationService {
                 double score = eventSimilarity.getScore() * userActionList.stream()
                         .filter(event -> event.getEventId() == eventId)
                         .findFirst().map(UserAction::getScore).orElse(1.0);
-                double OldScore = weightedScoreForUnwatchedEvent.get(eventId);
-                weightedScoreForUnwatchedEvent.put(eventId, score + OldScore);
+                double oldScore = weightedScoreForUnwatchedEvent.get(eventId);
+                weightedScoreForUnwatchedEvent.put(eventId, score + oldScore);
             }
         }
 

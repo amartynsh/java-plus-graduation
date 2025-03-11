@@ -11,7 +11,7 @@ import java.util.Set;
 
 @Repository
 public interface UserActionRepository extends JpaRepository<UserAction, Long> {
-    Optional<UserAction> findByUserIdAndEventId(Long user_id, Long event_id);
+    Optional<UserAction> findByUserIdAndEventId(Long userId, Long eventId);
 
     Set<UserAction> findByUserId(Long userId);
 
