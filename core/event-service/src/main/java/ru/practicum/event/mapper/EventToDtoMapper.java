@@ -25,7 +25,7 @@ public class EventToDtoMapper {
                 .paid(event.getPaid())
                 .title(event.getTitle())
                 .confirmedRequests(-1L)
-                .views(-1)
+                .rating(-1.0)
                 .location(location)
                 .description(event.getDescription())
                 .participantLimit(event.getParticipantLimit())
@@ -34,7 +34,5 @@ public class EventToDtoMapper {
                 .createdOn(event.getCreatedOn())
                 .publishedOn(event.getPublishedOn())
                 .build();
-
-
     }
 }

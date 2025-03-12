@@ -17,7 +17,11 @@ public interface EventService {
 
     EventFullDto update(Long eventId, UpdateEventAdminRequestDto updateEventAdminRequestDto);
 
-    EventFullDto get(Long eventId, HttpServletRequest request);
+    EventFullDto get(Long eventId, HttpServletRequest request, long userId);
+
+    void addLike(Long eventId, Long userId);
+
+    List<EventRecommendationDto> getRecommendations(long userId);
 
     List<EventFullDto> get(EventAdminFilterParamsDto filters, int from, int size);
 

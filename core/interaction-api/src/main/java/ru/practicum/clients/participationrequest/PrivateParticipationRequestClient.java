@@ -15,25 +15,6 @@ import java.util.List;
 @FeignClient(name = "participation-service")
 public interface PrivateParticipationRequestClient {
 
-    /*
-        @ResponseStatus(HttpStatus.CREATED)
-        @PostMapping("/{userId}/requests")
-        ParticipationRequestDto create(@PathVariable Long userId, @RequestParam Long eventId);
-
-        @GetMapping("/{userId}/requests")
-        List<ParticipationRequestDto> get(@PathVariable Long userId);
-
-        @PatchMapping("/{userId}/requests/{requestId}/cancel")
-        ParticipationRequestDto cancel(@PathVariable Long userId, @PathVariable Long requestId);
-
-
-
-        @GetMapping("/participationrequest/{requestId}")
-        ParticipationRequestDto getParticipationRequestsByRequest( @PathVariable Long requestId);
-
-        @PatchMapping("/requests/{requestId}")
-        void updateStatus(@PathVariable Long requestId, @RequestParam(name = "status") String status);
-    */
     @GetMapping("/users/participationrequest")
     List<ParticipationRequestDto> getParticipationRequestsBy(@RequestParam(name = "eventId") Long eventId,
                                                              @RequestParam(name = "status") String status);

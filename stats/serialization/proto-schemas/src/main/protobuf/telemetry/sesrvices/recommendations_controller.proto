@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package telemetry.service;
+
+import "google/protobuf/empty.proto";
+import "telemetry/messages/user_predictions.proto";
+
+option java_package = "ru.practicum";
+
+service RecommendationsController {
+  rpc GetRecommendationsForUser(recommendation_messages.UserPredictionsRequestProto) returns (stream recommendation_messages.RecommendedEventProto) {
+  }
+
+  rpc GetSimilarEvents (recommendation_messages.SimilarEventsRequestProto) returns (stream  recommendation_messages.RecommendedEventProto){
+
+  }
+
+  rpc GetInteractionsCount (recommendation_messages.InteractionsCountRequestProto) returns (stream recommendation_messages.RecommendedEventProto) {}
+
+}

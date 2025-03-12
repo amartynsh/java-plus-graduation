@@ -15,9 +15,11 @@ import ru.practicum.dto.event.EventStates;
 import ru.practicum.dto.participationrequest.ParticipationRequestDto;
 import ru.practicum.dto.participationrequest.ParticipationRequestStatus;
 import ru.practicum.dto.user.UserDto;
+import ru.practicum.grpc.stats.actions.ActionTypeProto;
 import ru.practicum.mapper.ParticipationRequestMapper;
 import ru.practicum.model.ParticipationRequest;
 import ru.practicum.repository.ParticipationRequestRepository;
+import ru.practicum.stats.client.CollectorClient;
 
 import java.util.List;
 import java.util.Optional;
@@ -33,6 +35,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     private final ParticipationRequestMapper participationRequestMapper;
     private final AdminUserClient userClient;
     private final EventClient eventClient;
+    private final CollectorClient collectorClient;
 
     private UserDto checkAndGetUserById(Long userId) {
         return userClient.getById(userId);
@@ -41,6 +44,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     @Override
     @Transactional
     public ParticipationRequestDto create(Long userId, Long eventId) {
+        log.trace("Participation request is created by user with id {} for event with id {}", userId, eventId);
         UserDto requester = checkAndGetUserById(userId);
         EventFullDto event = eventClient.getEvent(userId, eventId);
 
@@ -76,6 +80,8 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
                                 ParticipationRequestStatus.PENDING : ParticipationRequestStatus.CONFIRMED)
                         .build()
         );
+
+        collectorClient.sendUserAction(requester.getId(), event.getId(), ActionTypeProto.ACTION_REGISTER);
         log.info("Participation request is created: {}", createdParticipationRequest);
         return participationRequestMapper.toDto(createdParticipationRequest);
     }
@@ -133,8 +139,6 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     }
 
 
-    /// //!! Новый метод  - перенёс из эвента
-
     @Transactional
     @Override
     public EventRequestStatusUpdateResultDto changeEventState(Long userId, Long eventId,
@@ -151,8 +155,6 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .toList();
-        //Не очень понял, как обрабатывать это условие:
-        // "если для события лимит заявок равен 0 или отключена пре-модерация заявок, то подтверждение заявок не требуется"
 
         log.info("Заявки:  Лимит: {}, а заявок {}, разница между ними: {}", participantsLimit,
                 statusUpdateRequest.getRequestIds().size(), (participantsLimit
@@ -199,9 +201,4 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         return confirmedRequests.stream().map(participationRequestMapper::toDto).toList();
 
     }
-
-    /*public List<Long> checkAvialibleForRegistrationEvents(List<Long> events) {
-
-    }*/
-
 }
